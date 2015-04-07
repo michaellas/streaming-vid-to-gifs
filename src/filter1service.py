@@ -45,8 +45,14 @@ class Filter1Service(Service):
 
             #sprawdzenie czy parametr "filtersOn" ma wartość 1, czyli czy ma być stosowany filtr
             if 1 in current_filters:
-                #zastosowanie filtru COLOR_BGR2GRAY z biblioteki OpenCV na ramce wideo
-                frame = cv2.resize(frame,(120,50))
+                #zastosowanie filtru COLOR_BGR2GRAY z biblioteki OpenCV na ramce wideo (bylo)
+                #zmiana rozmiaru 
+                #frame = cv2.resize(frame,(120,50))
+                #nakladanie prostokatu
+                overlay = frame.copy()
+                cv2.rectangle(overlay,(0,0),(250,100),(255,0,0),-1)
+                opacity = 0.4
+                cv2.addWeighted(overlay, opacity, frame, 1 - opacity, 0, frame)
             video_output.send(frame.dumps()) #przesłanie ramki za pomocą interfejsu wyjściowego
 
 if __name__=="__main__":
