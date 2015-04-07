@@ -51,8 +51,16 @@ cam = cv2.VideoCapture("data/Big.hero.6.mp4")
 
 #obsługa checkbox'a
 check1=tk.IntVar()
-checkbox1 = tk.Checkbutton(root, text="Filter 1", variable=check1)
+checkbox1 = tk.Checkbutton(root, text="Mark frame", variable=check1)
 checkbox1.pack()
+
+check2=tk.IntVar()
+checkbox2 = tk.Checkbutton(root, text="LUV conversion", variable=check2)
+checkbox2.pack()
+
+check3=tk.IntVar()
+checkbox3 = tk.Checkbutton(root, text="Resize", variable=check3)
+checkbox3.pack()
 
 #dołączenie metody update_all do głównej pętli programu, wynika ze specyfiki TKinter
 root.after(0, func=lambda: update_all(root, cam, set())) 
