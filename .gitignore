@@ -1,6 +1,7 @@
 # directories
 Include
 tcl
+Scripts
 
 # ignore lib unless in Lib/site-packages
 Lib/*
