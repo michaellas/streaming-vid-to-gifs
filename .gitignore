@@ -16,6 +16,7 @@ Lib/site-packages/*
 # media test files
 *.avi
 *.mp4
+*.m4v
 
 #
 Scripts/*.dll
