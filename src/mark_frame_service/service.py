@@ -9,6 +9,7 @@ from ComssServiceDevelopment.service import Service, ServiceController
 
 import cv2 #import modułu biblioteki OpenCV
 import numpy as np #import modułu biblioteki Numpy
+import os
 
 class Filter1Service(Service):
     """klasa usługi musi dziedziczyć po ComssServiceDevelopment.service.Service"""
@@ -57,5 +58,6 @@ class Filter1Service(Service):
 
 if __name__=="__main__":
     #utworzenie obiektu kontrolera usługi
-    sc = ServiceController(Filter1Service, "src/filter1service.json")
+    config_name = os.path.join( os.path.dirname(__file__), "service.json") # f.e. src\mark_frame_service\service.json
+    sc = ServiceController(Filter1Service, config_name)
     sc.start() #uruchomienie usługi

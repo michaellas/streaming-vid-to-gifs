@@ -12,7 +12,7 @@ import Tkinter as tk #import modułu biblioteki Tkinter -- okienka
 #utworzenie obiektu kontroletra testowego,
 #jako parametr podany jest plik konfiguracji usługi,
 #do której "zaślepka" jest dołączana
-service_controller = DevServiceController("src/filter1service.json")
+service_controller = DevServiceController("src/input_descriptor.json")
 
 #deklaracja interfejsu wyjściowego konektora msg_stream_connector,
 #należy zwrócić uwagę, iż identyfikator musi być zgodny z WEJŚCIEM usługi,

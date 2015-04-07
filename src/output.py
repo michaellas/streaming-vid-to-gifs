@@ -13,7 +13,7 @@ import numpy as np #import modułu biblioteki Numpy
 
 #utworzenie obiektu kontroletra testowego, jako parametr podany
 #jest plik konfiguracji usługi, do której "zaślepka" jest dołączana
-service_controller = DevServiceController("src/filter1service.json")
+service_controller = DevServiceController("src/output_descriptor.json")
 #deklaracja interfejsu wejściowego konektora msg_stream_connector,
 #należy zwrócić uwagę, iż identyfikator musi być zgodny z WYJŚCIEM usługi,
 #do której "zaślepka" jest podłączana
