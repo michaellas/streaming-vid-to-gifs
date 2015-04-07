@@ -1,0 +1,1 @@
+Scripts\py2.exe src\resize_frame_service\service.py
