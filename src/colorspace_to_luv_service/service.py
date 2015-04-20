@@ -11,7 +11,7 @@ import cv2 #import modułu biblioteki OpenCV
 import numpy as np #import modułu biblioteki Numpy
 import os
 
-class Filter1Service(Service):
+class ColorspaceToLuvService(Service):
     """klasa usługi musi dziedziczyć po ComssServiceDevelopment.service.Service"""
     
     def __init__(self):
