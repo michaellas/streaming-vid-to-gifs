@@ -36,8 +36,6 @@ GIF_SEPARATION_f = int(GIF_SEPARATION * STD_FPS) # in frames
 id_of_last_anim_end = 0 # id of the last frame of the saved animation
 
 def analize_frame(frame_thumbs_cache, frame_id, frame):
-	global id_of_last_anim_end
-	
 	# wait some time between recording the gifs
 	if frame_id < id_of_last_anim_end + GIF_SEPARATION_f:
 		return None,None
@@ -53,6 +51,7 @@ def analize_frame(frame_thumbs_cache, frame_id, frame):
 	return frame_cmp.result()
 
 def main(movie):
+	global id_of_last_anim_end
 	width = movie.get( cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
 	height = movie.get( cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
 	length = movie.get( cv2.cv.CV_CAP_PROP_FRAME_COUNT)
