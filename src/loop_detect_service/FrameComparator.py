@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import numpy
 import cv2
 
@@ -18,8 +15,7 @@ class FrameComparator:
         pass
 
     def __try_set( self, compared_frame_id, frame_distance):
-        old_dist = self.most_similar_frame[1]
-        if (not self.most_similar_frame) or frame_distance < old_dist:
+        if (not self.most_similar_frame) or frame_distance < self.most_similar_frame[1]:
             self.most_similar_frame = (compared_frame_id, frame_distance)
 
     @staticmethod

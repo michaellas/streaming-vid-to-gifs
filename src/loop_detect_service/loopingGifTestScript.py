@@ -8,10 +8,7 @@ import numpy
 import cv2
 
 from FrameComparator import FrameComparator
-#from RingBuffer import RingBuffer
-import collections # http://stackoverflow.com/questions/4151320/efficient-circular-buffer
-# d = collections.deque(maxlen=10)
-
+from RingBuffer import RingBuffer
 from Utils import *
 
 '''
@@ -37,22 +34,21 @@ GIF_SEPARATION_f = int(GIF_SEPARATION * STD_FPS) # in frames
 
 
 last_anim_frame = 0 # id of the last frame of the saved animation
-# last_anim_length = 0
 
 def analize_frame(frame_thumbs_cache, frame_id, frame):
-	global last_anim_frame#, last_anim_length
-	# print ">" + str(frame_id)
+	global last_anim_frame
 	
 	# wait some time between recording the gifs
-	# if frame_id < last_anim_frame + last_anim_length + GIF_SEPARATION_f:
 	if frame_id < last_anim_frame + GIF_SEPARATION_f:
 		return None
 
 	# get the most similar frame from the past
 	frame_cmp = FrameComparator(frame)
-	frames_to_check_count = MAX_RECORDING_TIME_f - MIN_GIF_LENGTH_f
-	for dx in range(1, frames_to_check_count,2):
-		frame_to_check_data = frame_thumbs_cache[frame_id + dx] # we actually have to go forward in the buffer
+	frames_to_check_count = MAX_RECORDING_TIME_f - MIN_GIF_LENGTH_f # TODO move to outer scope
+	for dx in range(1, frames_to_check_count):
+		# (we have to go forward in the buffer)
+		frame_to_check_data = frame_thumbs_cache[frame_id + dx]
+		#if frame_to_check_data is not None:
 		if frame_to_check_data:
 			frame_cmp( frame_to_check_data[0], frame_to_check_data[1])
 
@@ -75,8 +71,8 @@ def main(movie):
 
 	frame_id = 0
 	stats = { 'frames_saved_as_anim': 0, 'frames_dist': [] }
-	frame_cache = RingBuffer( MAX_RECORDING_TIME_f)
-	frame_thumbs_cache = RingBuffer( MAX_RECORDING_TIME_f)
+	frame_cache = RingBuffer(MAX_RECORDING_TIME_f)
+	frame_thumbs_cache = RingBuffer(MAX_RECORDING_TIME_f)
 
 	# for every frame
 	read_successful = True
@@ -88,7 +84,7 @@ def main(movie):
 		# frame = numpy.loads(frame_raw) # movie read through network
 		frame = frame_raw # movie read from the disc
 
-		# create thumbnail to speed up comparision
+		# create thumbnail to speed up comparison
 		# TODO use separate image to not allocate mem. on every frame
 		frame_thumb = cv2.resize( frame, dsize=(0,0), fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_CUBIC)
 
@@ -102,7 +98,7 @@ def main(movie):
 			seq_start, frame_dist = frame_analize_results
 			stats['frames_dist'].append( frame_dist)
 			if frame_dist < MAX_ACCEPTABLE_DISTANCE and seq_start < frame_id:
-				print seq_start, frame_id
+				#print seq_start, frame_id
 				stats['frames_saved_as_anim'] += frame_id - seq_start
 				# write anim to file
 				frames = [ frame_cache[i][1] for i in range(seq_start, frame_id)]

@@ -23,7 +23,7 @@ def write_movie(name, frames):
 
 def createLogger():
     consoleLogger = logging.StreamHandler()
-    formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(name)s: %(message)s')
+    formatter = logging.Formatter('%(asctime)s [%(levelname)5s] %(name)s: %(message)s')
     consoleLogger.setFormatter(formatter)
     logger = logging.getLogger('main')
     logger.addHandler(consoleLogger)
