@@ -21,10 +21,10 @@ PIL vs FreeImage vs ImageMagick
 
 # config
 MAX_RECORDING_TIME = 3 # in seconds
-MIN_GIF_LENGTH = 0.2 # in seconds
+MIN_GIF_LENGTH = 0.8 # in seconds
 GIF_SEPARATION = 0.5 # in seconds (min time between gifs)
 THUMBNAIL_FRAME_WIDTH = 150 # in px (compare frames using 150px wide miniature versions)
-MAX_ACCEPTABLE_DISTANCE = 1.2 # wtf ?! (experimental)
+MAX_ACCEPTABLE_DISTANCE = 1000 # wtf ?! (experimental) used when determining if frames are the same
 
 # const
 STD_FPS = 24.0
@@ -68,6 +68,7 @@ def main(movie):
 	height = movie.get( cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
 	length = movie.get( cv2.cv.CV_CAP_PROP_FRAME_COUNT)
 	scale_factor = THUMBNAIL_FRAME_WIDTH * 1.0 / width # used in thumbnail resize
+	#scale_factor_giffed = 400.0 / width # used in thumbnail resize
 
 	frame_id = 0
 	stats = { 'frames_saved_as_anim': 0, 'frames_dist': [] }
@@ -79,6 +80,7 @@ def main(movie):
 	while read_successful:
 		read_successful, frame_raw = movie.read()
 		if not read_successful: break
+		if frame_id > 2000: break
 
 		# load frame to numpy array (use only when frame_raw is string )
 		# frame = numpy.loads(frame_raw) # movie read through network
@@ -87,12 +89,14 @@ def main(movie):
 		# create thumbnail to speed up comparison
 		# TODO use separate image to not allocate mem. on every frame
 		frame_thumb = cv2.resize( frame, dsize=(0,0), fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_CUBIC)
-
+		#frame_to_gif = cv2.resize( frame, dsize=(0,0), fx=scale_factor_giffed, fy=scale_factor_giffed, interpolation=cv2.INTER_CUBIC)
+		frame_to_gif = frame
+		
 		# convert frame to CIELUV color space
 		# frameLUV = cv2.cvtColor(frame_thumb, cv2.COLOR_RGB2LUV)
 		frameLUV = frame_thumb
 
-		frame_analize_results = analize_frame(frame_thumbs_cache, frame_id, frameLUV)
+		frame_analize_results = analize_frame(frame_thumbs_cache, frame_id, frameLUV) # either None or id of the frame from the past
 
 		if frame_analize_results:
 			seq_start, frame_dist = frame_analize_results
@@ -107,7 +111,7 @@ def main(movie):
 
 		# put frame into buffer
 		frame_thumbs_cache[frame_id] = frameLUV
-		frame_cache[frame_id] = frame
+		frame_cache[frame_id] = frame_to_gif
 		frame_id = frame_id + 1
 		print_progress( frame_id * 100 / length)
 
