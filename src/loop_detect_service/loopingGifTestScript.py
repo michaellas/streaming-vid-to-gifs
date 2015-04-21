@@ -40,7 +40,7 @@ def analize_frame(frame_thumbs_cache, frame_id, frame):
 	
 	# wait some time between recording the gifs
 	if frame_id < last_anim_frame + GIF_SEPARATION_f:
-		return None
+		return None,None
 
 	# get the most similar frame from the past
 	frame_cmp = FrameComparator(frame)
@@ -51,17 +51,7 @@ def analize_frame(frame_thumbs_cache, frame_id, frame):
 		#if frame_to_check_data is not None:
 		if frame_to_check_data:
 			frame_cmp( frame_to_check_data[0], frame_to_check_data[1])
-
-	if not frame_cmp.most_similar_frame: return None
-
-	# found similar frame
-	# start_frame_id, dist = frame_cmp.most_similar_frame
-	# print '#{}: {:.2f}'.format(frame_id, dist)
-
-	last_anim_frame = frame_id
-	# last_anim_length = frame_id - start_frame_id
-	return frame_cmp.most_similar_frame
-	
+	return frame_cmp.result()
 
 def main(movie):
 	width = movie.get( cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
@@ -96,10 +86,8 @@ def main(movie):
 		# frameLUV = cv2.cvtColor(frame_thumb, cv2.COLOR_RGB2LUV)
 		frameLUV = frame_thumb
 
-		frame_analize_results = analize_frame(frame_thumbs_cache, frame_id, frameLUV) # either None or id of the frame from the past
-
-		if frame_analize_results:
-			seq_start, frame_dist = frame_analize_results
+		seq_start, frame_dist = analize_frame(frame_thumbs_cache, frame_id, frameLUV) # either None or id of the frame from the past
+		if seq_start:
 			stats['frames_dist'].append( frame_dist)
 			if frame_dist < MAX_ACCEPTABLE_DISTANCE and seq_start < frame_id:
 				#print seq_start, frame_id
@@ -108,6 +96,7 @@ def main(movie):
 				frames = [ frame_cache[i][1] for i in range(seq_start, frame_id)]
 				name = 'out/fragment_{}'.format(frame_id)
 				write_movie( name, frames)
+				last_anim_frame = frame_id
 
 		# put frame into buffer
 		frame_thumbs_cache[frame_id] = frameLUV
