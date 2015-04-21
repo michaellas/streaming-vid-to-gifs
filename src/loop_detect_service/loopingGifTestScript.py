@@ -67,7 +67,6 @@ def main(movie):
 	while read_successful:
 		read_successful, frame_raw = movie.read()
 		if not read_successful: break
-		if frame_id > 2000: break
 
 		# load frame to numpy array (use only when frame_raw is string )
 		# frame = numpy.loads(frame_raw) # movie read through network
@@ -85,11 +84,12 @@ def main(movie):
 		if frame_dist:
 			stats['frames_dist'].append( frame_dist)
 
-		if seq_start and frame_dist and (frame_dist < MAX_ACCEPTABLE_DISTANCE):
+		if seq_start and frame_dist and (seq_start < frame_id) and ( (frame_id-seq_start > MIN_GIF_LENGTH_f )) and (frame_dist < MAX_ACCEPTABLE_DISTANCE):
 			stats['frames_saved_as_anim'] += frame_id - seq_start
 			# write anim to file
 			frames = [ frame_cache[i][1] for i in range(seq_start, frame_id)]
 			name = 'out/fragment_{}'.format(frame_id)
+			print 'Saving: "%s", total of frames: %d' % (name, frame_id-seq_start)
 			write_movie( name, frames)
 			id_of_last_anim_end = frame_id
 

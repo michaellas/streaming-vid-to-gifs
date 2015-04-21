@@ -17,7 +17,6 @@ def write_movie(name, frames):
     height, width, layers =  336, 800, 1
     #height, width, layers =  118, 400, 1
     fourcc = cv2.cv.CV_FOURCC(*'XVID')
-    print name+'.avi'
     out = cv2.VideoWriter( name + '.avi', fourcc, 24, (width,height))
     for frame in frames:
         out.write(frame)
