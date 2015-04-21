@@ -4,14 +4,14 @@
 
 class RingBuffer:
     def __init__(self, size):
-        self.size = size
-        self.cache = [None] * self.size
+        self.__size = size
+        self.__cache = [(None,None)] * self.__size
 
     def __setitem__(self, frame_id, frame):
-        self.cache.insert(self.__wrap_index(frame_id), (frame_id, frame))
+        self.__cache.insert(self.__wrap_index(frame_id), (frame_id, frame))
 
     def __getitem__(self, frame_id):
-        return self.cache[self.__wrap_index(frame_id)]
+        return self.__cache[self.__wrap_index(frame_id)]
 
     def __wrap_index(self, index):
-        return index % self.size
+        return index % self.__size
