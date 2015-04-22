@@ -77,8 +77,8 @@ def main(movie):
 		frame_thumb = cv2.resize( frame, dsize=(0,0), fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_CUBIC)
 		
 		# convert frame to CIELUV color space
-		# frameLUV = cv2.cvtColor(frame_thumb, cv2.COLOR_RGB2LUV)
-		frameLUV = frame_thumb
+		frameLUV = cv2.cvtColor(frame_thumb, cv2.COLOR_RGB2LUV)
+		#frameLUV = frame_thumb
 
 		seq_start, frame_dist = analize_frame(frame_thumbs_cache, frame_id, frameLUV)
 		if frame_dist:
