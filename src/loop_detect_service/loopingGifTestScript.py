@@ -90,7 +90,7 @@ def main(movie):
 			frames = [ frame_cache[i][1] for i in range(seq_start, frame_id)]
 			name = 'out/fragment_{}'.format(frame_id)
 			print 'Saving: "%s", total of frames: %d' % (name, frame_id-seq_start)
-			write_movie( name, frames)
+			write_movie( name, frames, int(width), int(height))
 			id_of_last_anim_end = frame_id
 
 		# put frame into buffer
@@ -113,7 +113,9 @@ log.info("---start---")
 # read file
 log.debug("opening movie file")
 # movie = read_movie( "data/Big.hero.6-1.m4v")
-movie = read_movie( "data/Big.hero.6.mp4")
+#movie = read_movie( "data/Big.hero.6.mp4")
+movie = read_movie( "data/TheForceAwakensOfficialTeaser-1.mp4")
+
 log.debug("\t> success")
 
 # invoke script
