@@ -34,7 +34,7 @@ class FrameAnalyzer:
 		self.__frame_thumbs_cache = RingBuffer(self.max_gif_length_f)
 		self.__stats = { 'frames_saved_as_anim': 0, 'frames_dist': [] }
 
-	def run(self, frame_data):
+	def __call__(self, frame_data):
 		width, height = FrameAnalyzer.__read_frame_dimensions(frame_data)
 
 		frame_id = self.__frame_id
@@ -110,7 +110,7 @@ def main(movie):
 		read_successful, frame_raw = movie.read()
 		if not read_successful: break # either error or last frame
 
-		script.run(frame_raw)
+		script(frame_raw)
 		print_progress( to_percent(script._current_frame_id(), total_frames))
 
 	# print end stats
@@ -124,21 +124,21 @@ def main(movie):
 		frames_saved_as_anim, total_frames, percent_stored))
 	log.info( "avg frame difference: {:.2f}".format( avg_frame_dist))
 
+if __name__ == '__main__':
+	log = createLogger()
+	log.info("---start---")
 
-log = createLogger()
-log.info("---start---")
+	# read file
+	log.debug("opening movie file")
+	# movie = read_movie( "data/Big.hero.6.mp4")
+	movie = read_movie( "data/TheForceAwakensOfficialTeaser-1.mp4")
+	# movie = read_movie( "data/Tangled2010-1.mp4")
 
-# read file
-log.debug("opening movie file")
-# movie = read_movie( "data/Big.hero.6.mp4")
-movie = read_movie( "data/TheForceAwakensOfficialTeaser-1.mp4")
-# movie = read_movie( "data/Tangled2010-1.mp4")
+	log.debug("\t> success")
 
-log.debug("\t> success")
+	# invoke script
+	main( movie)
 
-# invoke script
-main( movie)
-
-# end
-cv2.destroyAllWindows()
-log.info("---end---")
+	# end
+	cv2.destroyAllWindows()
+	log.info("---end---")

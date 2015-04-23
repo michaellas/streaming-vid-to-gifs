@@ -1,1 +1,1 @@
-Scripts\py2.exe src\loop_detect_service\loopingGifTestScript.py
+Scripts\py2.exe src\loop_detect_service\FrameAnalyzer.py
