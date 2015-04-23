@@ -18,93 +18,123 @@ http://docs.scipy.org/doc/numpy/reference/arrays.ndarray.html
 PIL vs FreeImage vs ImageMagick
 '''
 
+class FrameAnalizer:
+	# config
+	max_gif_length = 3 # in seconds
+	min_gif_length = 0.8 # in seconds
+	min_time_between_gifs = 0.5 # in seconds (min time between gifs)
+	thumbnail_frame_width = 150 # in px (compare frames using 150px wide miniature versions)
+	max_acceptable_distance = 1000 # used when determining if frames are the same
 
-# config
-MAX_GIF_LENGTH = 3 # in seconds
-MIN_GIF_LENGTH = 0.8 # in seconds
-GIF_SEPARATION = 0.5 # in seconds (min time between gifs)
-THUMBNAIL_FRAME_WIDTH = 150 # in px (compare frames using 150px wide miniature versions)
-MAX_ACCEPTABLE_DISTANCE = 1000 # used when determining if frames are the same
+	# const
+	std_fps = 24.0
+	max_gif_length_f = int(max_gif_length * std_fps) # in frames
+	min_gif_length_f = int(min_gif_length * std_fps) # in frames
+	min_time_between_gifs_f = int(min_time_between_gifs * std_fps) # in frames
 
-# const
-STD_FPS = 24.0
-MAX_GIF_LENGTH_f = int(MAX_GIF_LENGTH * STD_FPS) # in frames
-MIN_GIF_LENGTH_f = int(MIN_GIF_LENGTH * STD_FPS) # in frames
-GIF_SEPARATION_f = int(GIF_SEPARATION * STD_FPS) # in frames
+	def __init__(self):
+		self.__frame_id = 0
+		self.__id_of_last_anim_end = 0 # id of the last frame of the saved animation
+		self.__frame_cache = RingBuffer(self.max_gif_length_f)
+		self.__frame_thumbs_cache = RingBuffer(self.max_gif_length_f)
+		self.__stats = { 'frames_saved_as_anim': 0, 'frames_dist': [] }
 
+	def run(self, frame_data):
+		# width = movie.get( cv2.cv.CV_CAP_PROP_FRAME_WIDTH) # used in thumbnail resize
+		# height = movie.get( cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
+		# print( frame_data.dim)
+		# print( frame_data.dim())
+		# print( help(type(frame_data)))
+		# print( frame_data.shape)
+		# exit(0)
+		width, height = FrameAnalizer.__read_frame_dimensions(frame_data)
 
-id_of_last_anim_end = 0 # id of the last frame of the saved animation
+		frame_id = self.__frame_id
+		thumb = self.__generate_thumb(frame_data) # TODO remove this and use one generated from indep. service
+		seq_start, frame_dist = self.__get_frame_from_the_past(thumb)
+		if frame_dist:
+			self.__stats['frames_dist'].append( frame_dist)
 
-def analize_frame(frame_thumbs_cache, frame_id, frame):
-	# wait some time between recording the gifs
-	if frame_id < id_of_last_anim_end + GIF_SEPARATION_f:
-		return None,None
+		if seq_start and frame_dist and (seq_start < frame_id) and ( (frame_id-seq_start > self.min_gif_length_f )) and (frame_dist < self.max_acceptable_distance):
+			self.__stats['frames_saved_as_anim'] += frame_id - seq_start
+			# write anim to file
+			# TODO use seq_start + 1
+			frames = [ self.__frame_cache[i][1] for i in range(seq_start, frame_id)]
+			name = 'out/fragment_{}'.format(frame_id)
+			print 'Saving: "%s", total of frames: %d' % (name, frame_id - seq_start)
+			write_movie( name, frames, int(width), int(height))
+			self.__id_of_last_anim_end = frame_id
 
-	# get the most similar frame from the past
-	frame_cmp = FrameComparator(frame)
-	frames_to_check_count = MAX_GIF_LENGTH_f - MIN_GIF_LENGTH_f # TODO move to outer scope
-	for dx in range(1, frames_to_check_count):
-		# (we have to go forward in the buffer)
-		cmp_frame_id, cmp_frame_data = frame_thumbs_cache[frame_id + dx]
-		if cmp_frame_id and (cmp_frame_data is not None):
-			frame_cmp( cmp_frame_id, cmp_frame_data)
-	return frame_cmp.result()
+		# put frame into buffer
+		self.__frame_thumbs_cache[frame_id] = thumb
+		self.__frame_cache[frame_id] = frame_data
+		self.__frame_id = frame_id + 1
+
+	def __generate_thumb(self, frame):
+		'''create thumbnail to speed up comparison'''
+		width, _ = FrameAnalizer.__read_frame_dimensions(frame)
+		scale_factor = self.thumbnail_frame_width * 1.0 / width
+		# TODO use separate buffer image to not allocate mem. on every frame
+		frame_thumb = cv2.resize( frame, dsize=(0,0), fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_CUBIC)
+
+		# convert frame to CIELUV color space
+		#frameLUV = frame_thumb
+		frameLUV = cv2.cvtColor(frame_thumb, cv2.COLOR_RGB2LUV)
+		
+		return frameLUV
+
+	def __get_frame_from_the_past(self, frame):
+		# wait some time between recording the gifs
+		if self.__frame_id < self.__id_of_last_anim_end + self.min_time_between_gifs_f:
+			return None,None
+
+		# get the most similar frame from the past
+		frame_id = self.__frame_id
+		frame_cmp = FrameComparator(frame)
+		frames_to_check_count = self.max_gif_length_f - self.min_gif_length_f
+		for dx in range(1, frames_to_check_count):
+			# (we have to go forward in the buffer)
+			cmp_frame_id, cmp_frame_data = self.__frame_thumbs_cache[frame_id + dx]
+			if cmp_frame_id and (cmp_frame_data is not None):
+				frame_cmp( cmp_frame_id, cmp_frame_data)
+		return frame_cmp.result()
+
+	@staticmethod
+	def __read_frame_dimensions(frame):
+		h, w, channels = frame.shape
+		return w,h
+
+	def _stats(self):
+		return self.__stats
+
+	def _current_frame_id(self):
+		return self.__frame_id
+
 
 def main(movie):
-	global id_of_last_anim_end
-	width = movie.get( cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
-	height = movie.get( cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
-	length = movie.get( cv2.cv.CV_CAP_PROP_FRAME_COUNT)
-	scale_factor = THUMBNAIL_FRAME_WIDTH * 1.0 / width # used in thumbnail resize
-
-	frame_id = 0
-	stats = { 'frames_saved_as_anim': 0, 'frames_dist': [] }
-	frame_cache = RingBuffer(MAX_GIF_LENGTH_f)
-	frame_thumbs_cache = RingBuffer(MAX_GIF_LENGTH_f)
+	to_percent = lambda x,max: x*100.0/max
+	total_frames = movie.get( cv2.cv.CV_CAP_PROP_FRAME_COUNT)
+	script = FrameAnalizer()
 
 	# for every frame
 	read_successful = True
 	while read_successful:
 		read_successful, frame_raw = movie.read()
-		if not read_successful: break
+		if not read_successful: break # either error or last frame
 
-		# load frame to numpy array (use only when frame_raw is string )
-		# frame = numpy.loads(frame_raw) # movie read through network
-		frame = frame_raw # movie read from the disc
+		script.run(frame_raw)
+		print_progress( to_percent(script._current_frame_id(), total_frames))
 
-		# create thumbnail to speed up comparison
-		# TODO use separate image to not allocate mem. on every frame
-		frame_thumb = cv2.resize( frame, dsize=(0,0), fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_CUBIC)
-		
-		# convert frame to CIELUV color space
-		frameLUV = cv2.cvtColor(frame_thumb, cv2.COLOR_RGB2LUV)
-		#frameLUV = frame_thumb
-
-		seq_start, frame_dist = analize_frame(frame_thumbs_cache, frame_id, frameLUV)
-		if frame_dist:
-			stats['frames_dist'].append( frame_dist)
-
-		if seq_start and frame_dist and (seq_start < frame_id) and ( (frame_id-seq_start > MIN_GIF_LENGTH_f )) and (frame_dist < MAX_ACCEPTABLE_DISTANCE):
-			stats['frames_saved_as_anim'] += frame_id - seq_start
-			# write anim to file
-			frames = [ frame_cache[i][1] for i in range(seq_start, frame_id)]
-			name = 'out/fragment_{}'.format(frame_id)
-			print 'Saving: "%s", total of frames: %d' % (name, frame_id-seq_start)
-			write_movie( name, frames, int(width), int(height))
-			id_of_last_anim_end = frame_id
-
-		# put frame into buffer
-		frame_thumbs_cache[frame_id] = frameLUV
-		frame_cache[frame_id] = frame
-		frame_id = frame_id + 1
-		print_progress( frame_id * 100 / length)
-
+	# print end stats
 	print ''
-	log.info( "saved {0}/{1} frames = {2:.2f}% of movie stored in gifs".format(
-		stats['frames_saved_as_anim'], frame_id,
-		( stats['frames_saved_as_anim'] * 100.0 / frame_id)))
-	avg = sum(stats['frames_dist']) / len(stats['frames_dist'])
-	log.info( "avg frame difference: {:.2f}".format( avg))
+	stats = script._stats()
+	frames_saved_as_anim = stats['frames_saved_as_anim']
+	percent_stored = to_percent(frames_saved_as_anim, total_frames)
+	avg_frame_dist = sum(stats['frames_dist']) / len(stats['frames_dist'])
+
+	log.info( "saved {0}/{1} frames -> {2:.2f}% of movie stored in gifs".format(
+		frames_saved_as_anim, total_frames, percent_stored))
+	log.info( "avg frame difference: {:.2f}".format( avg_frame_dist))
 
 
 log = createLogger()
@@ -113,8 +143,9 @@ log.info("---start---")
 # read file
 log.debug("opening movie file")
 # movie = read_movie( "data/Big.hero.6-1.m4v")
-#movie = read_movie( "data/Big.hero.6.mp4")
+# movie = read_movie( "data/Big.hero.6.mp4")
 movie = read_movie( "data/TheForceAwakensOfficialTeaser-1.mp4")
+# movie = read_movie( "data/Tangled2010-1.mp4")
 
 log.debug("\t> success")
 
