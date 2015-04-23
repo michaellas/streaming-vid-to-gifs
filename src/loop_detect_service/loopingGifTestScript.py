@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# BH6: 18.17 -19.48
-# T: 28.32 28.57
 
 import logging
 import numpy
@@ -12,13 +10,10 @@ from RingBuffer import RingBuffer
 from Utils import *
 
 '''
-http://zulko.github.io/blog/2014/01/23/making-animated-gifs-from-video-files-with-python/
-http://docs.opencv.org/trunk/doc/py_tutorials/py_video/py_lucas_kanade/py_lucas_kanade.html#lucas-kanade
-http://docs.scipy.org/doc/numpy/reference/arrays.ndarray.html
-PIL vs FreeImage vs ImageMagick
+TODO use ffmpeg to convert avi to gif
 '''
 
-class FrameAnalizer:
+class FrameAnalyzer:
 	# config
 	max_gif_length = 3 # in seconds
 	min_gif_length = 0.8 # in seconds
@@ -40,14 +35,7 @@ class FrameAnalizer:
 		self.__stats = { 'frames_saved_as_anim': 0, 'frames_dist': [] }
 
 	def run(self, frame_data):
-		# width = movie.get( cv2.cv.CV_CAP_PROP_FRAME_WIDTH) # used in thumbnail resize
-		# height = movie.get( cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
-		# print( frame_data.dim)
-		# print( frame_data.dim())
-		# print( help(type(frame_data)))
-		# print( frame_data.shape)
-		# exit(0)
-		width, height = FrameAnalizer.__read_frame_dimensions(frame_data)
+		width, height = FrameAnalyzer.__read_frame_dimensions(frame_data)
 
 		frame_id = self.__frame_id
 		thumb = self.__generate_thumb(frame_data) # TODO remove this and use one generated from indep. service
@@ -72,7 +60,7 @@ class FrameAnalizer:
 
 	def __generate_thumb(self, frame):
 		'''create thumbnail to speed up comparison'''
-		width, _ = FrameAnalizer.__read_frame_dimensions(frame)
+		width, _ = FrameAnalyzer.__read_frame_dimensions(frame)
 		scale_factor = self.thumbnail_frame_width * 1.0 / width
 		# TODO use separate buffer image to not allocate mem. on every frame
 		frame_thumb = cv2.resize( frame, dsize=(0,0), fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_CUBIC)
@@ -114,7 +102,7 @@ class FrameAnalizer:
 def main(movie):
 	to_percent = lambda x,max: x*100.0/max
 	total_frames = movie.get( cv2.cv.CV_CAP_PROP_FRAME_COUNT)
-	script = FrameAnalizer()
+	script = FrameAnalyzer()
 
 	# for every frame
 	read_successful = True
@@ -142,7 +130,6 @@ log.info("---start---")
 
 # read file
 log.debug("opening movie file")
-# movie = read_movie( "data/Big.hero.6-1.m4v")
 # movie = read_movie( "data/Big.hero.6.mp4")
 movie = read_movie( "data/TheForceAwakensOfficialTeaser-1.mp4")
 # movie = read_movie( "data/Tangled2010-1.mp4")
