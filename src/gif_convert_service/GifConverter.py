@@ -41,6 +41,7 @@ cmds cheatsheet:
 
 import subprocess
 import os
+import sys
 
 class GifConverter:
 
@@ -145,13 +146,20 @@ def video_info(ffmpeg_bin, file_path):
 		exit(1)
 
 def read_cmd_args():
-	FFMPEG_DIR = 'C:\\Users\\Marcin\\Desktop\\ffmpeg-20150215-git-2a72b16-win64-static\\bin'
-	FFMPEG_BIN = 'ffmpeg'
-	return os.path.join(FFMPEG_DIR,FFMPEG_BIN), 'out', os.path.join(FFMPEG_DIR,'eugene.avi')
-
+	# print sys.argv
+	if len(sys.argv) == 2: # only file name provided
+		return 'ffmpeg', '', sys.argv[1]
+	elif len(sys.argv) == 3: # ffmpeg & file name provided
+		return sys.argv[1], '', sys.argv[2]
+	elif len(sys.argv) > 3:
+		return sys.argv[1], sys.argv[2], sys.argv[3]
+	else:
+		print "usage: python GifConverter [ffmpeg path] [output dir] infile"
+		exit(1)
 
 if __name__ == '__main__':
 	ffmpeg_bin, out_dir, file_path = read_cmd_args()
+	# print [ffmpeg_bin, out_dir, file_path]
 	script = GifConverter(ffmpeg_bin, out_dir)
 	w,h,frames = video_info(ffmpeg_bin, file_path)
 	script(file_path,w,h,frames)
