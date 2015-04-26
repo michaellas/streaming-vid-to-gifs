@@ -127,7 +127,7 @@ def video_info(ffmpeg_bin, file_path):
 	import re
 	print file_path
 	# pattern = re.compile(r'Duration: 00:00:([0-9.]+).*Stream.*Video.*([0-9]{3,})x([0-9]{3,}).* ([0-9]+) fps')
-	pattern = re.compile(r'Duration: ([0-9.:]+).*Stream.*Video.*([0-9]{3,})x([0-9]{3,}).* ([0-9]+) fps')
+	pattern = re.compile(r'Duration: ([0-9.:]+).*Stream.*Video.* ([0-9]{3,})x([0-9]{3,}).* ([0-9]+) fps')
 	p = subprocess.Popen([ffmpeg_bin, '-i', file_path],
 	                     stdout=subprocess.PIPE,
 	                     stderr=subprocess.PIPE)
@@ -146,21 +146,24 @@ def video_info(ffmpeg_bin, file_path):
 		exit(1)
 
 def read_cmd_args():
-	# print sys.argv
-	if len(sys.argv) == 2: # only file name provided
-		return 'ffmpeg', '', sys.argv[1]
-	elif len(sys.argv) == 3: # ffmpeg & file name provided
-		return sys.argv[1], '', sys.argv[2]
-	elif len(sys.argv) > 3:
-		return sys.argv[1], sys.argv[2], sys.argv[3]
-	else:
-		print "usage: python GifConverter [ffmpeg path] [output dir] infile"
-		exit(1)
+	import argparse
+	parser = argparse.ArgumentParser(description='Demo')
+	parser.add_argument('--verbose', '-v', action='store_true', help='verbose flag')
+	parser.add_argument('--ffmpeg', help='path to ffmpeg exec', type=str)
+	parser.add_argument('--out', '-o', help='output directory', type=str)
+	# parser.add_argument('--out', '-o', action='store_true', help='output file')
+	parser.add_argument('infile')
+	
+	args = parser.parse_args()
+	return (args.ffmpeg if args.ffmpeg else 'ffmpeg',
+		args.out if args.out else '',
+		args.verbose,
+		args.infile
+		)
 
 if __name__ == '__main__':
-	ffmpeg_bin, out_dir, file_path = read_cmd_args()
-	# print [ffmpeg_bin, out_dir, file_path]
-	script = GifConverter(ffmpeg_bin, out_dir)
+	ffmpeg_bin, out_dir, verbose, file_path = read_cmd_args()
+	# print [ffmpeg_bin, out_dir, verbose, file_path]
+	script = GifConverter(ffmpeg_bin, out_dir, verbose=verbose)
 	w,h,frames = video_info(ffmpeg_bin, file_path)
 	script(file_path,w,h,frames)
-	
