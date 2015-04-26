@@ -4,140 +4,125 @@
 '''
 
 ffmpeg docs:
-https://ffmpeg.org/ffmpeg.html
+	https://ffmpeg.org/ffmpeg.html
+	https://ffmpeg.org/ffmpeg-filters.html
 
--y : yes to all
--i filename (input)
--r 
--f fmt (input/output)
--c[:stream_specifier] codec (input/output,per-stream) / -codec[:stream_specifier] codec (input/output,per-stream)
--t duration (input/output)
--s WxH : resize
--ss position (input/output) : seek
+	common options:
+	-y : yes to all
+	-i filename (input)
+	-r : framerate?
+	-f fmt (input/output)
+	-c[:stream_specifier] codec (input/output,per-stream) / -codec[:stream_specifier] codec (input/output,per-stream)
+	-t duration (input/output)
+	-s WxH : resize
+	-ss position (input/output) : seek
+
+TODO ffserver(https://ffmpeg.org/ffserver.html)
+	OR: https://github.com/vbence/stream-m
+
+	stream send:
+	ffmpeg -f vfwcap -r 16 -i 0 -i http://localhost:8089/ -g 52 -acodec libvorbis -ab 64k -vcodec libvpx -vb 448k -f matroska http://example.com:8080/publish/first?password=secret
+	ffmpeg -r 16 -i out.webm -g 52 -acodec libvorbis -ab 64k -vcodec libvpx -vb 448k -f matroska http://localhost:8080/publish/first?password=secret
 
 other process call:
-http://stackoverflow.com/questions/10400556/how-do-i-use-ffmpeg-with-python-by-passing-file-objects-instead-of-locations-to
-http://zulko.github.io/blog/2013/09/27/read-and-write-video-frames-in-python-using-ffmpeg/
+	http://stackoverflow.com/questions/10400556/how-do-i-use-ffmpeg-with-python-by-passing-file-objects-instead-of-locations-to
+	http://zulko.github.io/blog/2013/09/27/read-and-write-video-frames-in-python-using-ffmpeg/
 
+cmds cheatsheet:
+	to gif:
+	ffmpeg -y -i IN_FILE -r 20 -pix_fmt rgb8 OUT_FILE
 
-TODO crossfade begining/end
-need: fps,total_frame_count
-~55 frames
-~24fps
-=blend last 0.5 s -> 12 frames
+	to webm:
+	ffmpeg -y -i IN_FILE -c:v libvpx -crf 4 -b:v 2M OUT_FILE
 
-first:
-# ffmpeg -y -ss 2 -i eugene.avi -i eugene2.avi -filter_complex "color=white,fade=out:start_time=1:duration=1[alpha];[0:v][alpha]alphamerge[am];[1:v][am]overlay=0:0" -r 20 -pix_fmt rgb8 out_cross.gif
-executing:
-ffmpeg -y -ss 2 -i eugene.avi -i eugene2.avi -filter_complex "color=white,fade=out:45:15[alpha];[alpha]scale=800:448[alpha1];[0:v][alpha1]alphamerge[am];[1:v][am]overlay=0:0" -r 20 -pix_fmt rgb8 out_cross.avi
-
-ffmpeg -y -i eugene.avi -i SSPP-gif.avi -filter_complex "color=white,fade=out:45:15[alpha];[alpha]scale=800:448[alpha1];[0:v][alpha1]alphamerge[am];[1:v][am]overlay=0:0" -r 20 -pix_fmt rgb8 out_cross.avi
-filter_ = ';'.join([
-	# 'color=white,fade=out:%d:%d[alpha]' % (len2-SSPPsec,SSPPsec), # (start,duration)
-	# 'color=white,fade=out:30:10[alpha]', # (start,duration)
-	'color=white,fade=out:10:10[alpha]', # (start,duration)
-	'[alpha]scale=%d:%d[alpha1]' % (w,h),
-	'[1:v]scale=%d:%d[over]' % (w,h),
-	'[over][alpha1]alphamerge[am]',
-	'[0:v][am]overlay=50:0' # 2nd over first
-	# '[0:v][over]overlay=50:0'
-	# '[0:v][alpha1]overlay=50:0'
-	])
-
-
-
-TODO use ffserver instead of separate service ? (https://ffmpeg.org/ffserver.html)
-OR: https://github.com/vbence/stream-m
-looping webms: https://support.mozilla.org/en-US/questions/993718
-
-
-
-to gif:
-ffmpeg -y -i IN_FILE -r 20 -pix_fmt rgb8 OUT_FILE
-f.e. ffmpeg -y -i SSPP-gif.avi -r 20 -s 960x540 -pix_fmt rgb8 out_resized.gif
-
-to webm:
-ffmpeg -y -i IN_FILE -c:v libvpx -crf 4 -b:v 2M OUT_FILE
-TODO lower bitrate
-
-
-
-ffmpeg -f vfwcap -r 16 -i 0 -i http://localhost:8089/ -g 52 -acodec libvorbis -ab 64k -vcodec libvpx -vb 448k -f matroska http://example.com:8080/publish/first?password=secret
-ffmpeg -r 16 -i out.webm -g 52 -acodec libvorbis -ab 64k -vcodec libvpx -vb 448k -f matroska http://localhost:8080/publish/first?password=secret
+	loop webms in browser:
+	https://support.mozilla.org/en-US/questions/993718
 '''
 
-# https://ffmpeg.org/ffmpeg-filters.html#fade
-# https://ffmpeg.org/ffmpeg-filters.html#overlay
 from subprocess import call
 import os
 
-
 class GifConverter:
+
+	fade_len = 5        # fade last 5 seconds
+	fade_alpha = 0.33   # on last frame overlayed first frame should have 33% visibility
+	first_frame_name = 'first_frame.png'
+	out_ext = '.gif'
+
 	def __init__(self, ffmpeg_bin, out_dir):
 		self.ffmpeg_bin = ffmpeg_bin
 		self.out_dir = out_dir
+		self.first_frame = os.path.join(out_dir, GifConverter.first_frame_name)
 
-	def __call__(self, file_path):#, crossfade_len, crossfade_alpha):
-		len1,len2 = 55,20
-		fade_start, fade_len = 50,15 # will end 10s after first video guaranteeing 33& alpha on clip end
-		# fade_start, fade_len = 45,10
-		w,h = 800,448
-		
+	def __call__(self, file_path, w, h, total_frames):
+		# print file_path
+		base = os.path.basename(file_path)
+		file_name, ext = os.path.splitext(base)
+		out_path = os.path.join(out_dir, file_name + GifConverter.out_ext)
+		# print out_path
+
+		# f.e. will fade over last 10s guaranteeing 33% alpha on clip end
+		fade_start, real_fade_len = int(total_frames - GifConverter.fade_len), int(GifConverter.fade_len / GifConverter.fade_alpha)
+		# print(fade_start, real_fade_len)
+
 		# extract first frame
-		first_frame_path = self.__create_first_frame_image(file_path)
-		self.__cross_fade(file_path, first_frame_path, fade_start, fade_len,w,h)
+		self.__create_first_frame_image(file_path)
+
+		# exec
+		self.__cross_fade(file_path,out_path, fade_start,real_fade_len, w,h)
+
 
 	def __create_first_frame_image(self, video_path):
-		frame_path = 'first_frame.png'
 		cmd = [self.ffmpeg_bin,
-			'-y', # allow override
-			'-i', video_path,
-			'-t', '1', # only 1 second
-			'-r', '1', # one frame per second
-			frame_path
-			]
-		ret_code = call(cmd, shell=True) # should be 0
-		return frame_path
-
-	def __cross_fade(self, video_path, first_frame_path, fade_start, fade_len, w, h):
-		OUT_FILE = 'out_cross.avi'
-		filter_ = ';'.join([
-			'color=white,fade=in:%d:%d[alpha]' % (fade_start, fade_len), # (start,duration)
-			'[alpha]scale=%d:%d[alpha1]' % (w,h),
-			'[1:v]scale=w=%d:h=%d:sws_flags=bicubic[over]' % (w,h),
-			'[over][alpha1]alphamerge[am]', # TODO apply to repeated first frame
-
-			'[0:v][am]overlay=x=0:y=0:repeatlast=0' # 2nd over first
-			# '[0:v][over]overlay=50:0'
-			# '[0:v][alpha1]overlay=50:0'
-			])
-		cmd = [self.ffmpeg_bin,
-			'-y', # allow override
-			'-i', video_path,
-			# '-i', 'eugene.avi',
-			# '-loop', '1','-i', 'img.jpg',
-			'-loop', '1','-i', first_frame_path,
-			# '-i', 'SSPP-gif.avi',
-			'-filter_complex', '"'+filter_+'"',
-			#'-r', '20',  # frames per second
-			'-preset', 'slow',
-			'-pix_fmt', 'rgb8',
-			'-b:v', '2M',
-			OUT_FILE
+			'-y',                  # allow output file override
+			'-i', video_path,      # input0 - video to extract the frame from
+			'-t', '1',             # only first second
+			'-r', '1',             # one frame per second
+			self.first_frame
 			]
 		cmd = ' '.join(cmd)
-		print( cmd)
+		self.__os_call(cmd)
+
+	def __cross_fade(self, video_path, out_path, fade_start, fade_len, w, h):
+		overlay_image_over_last_frames_filter = ';'.join([
+			'color=white,fade=in:%d:%d[alpha]' % (fade_start, fade_len), # animated alpha channel
+			'[alpha]scale=%d:%d[alpha1]' % (w,h),           # scale alpha channel
+			'[1:v][alpha1]alphamerge[am]',                  # fade in first frame
+			'[0:v][am]overlay=x=0:y=0:repeatlast=0'         # overlay fading first frame over base video
+			])
+		cmd = [self.ffmpeg_bin,
+			'-y',                                # allow output file override
+			'-i', video_path,                    # input0 - base video
+			'-loop', '1','-i', self.first_frame, # input1 - first frame of the video (needs to be looped)
+			'-filter_complex', '"'+overlay_image_over_last_frames_filter+'"', # apply filter
+			# '-preset', 'slow',                 # max quality (not needed)
+			'-pix_fmt', 'rgb8',                  # result pixel format
+			'-b:v', '2M',                        # bitrate (should be high enough)
+			out_path
+			]
+		cmd = ' '.join(cmd)
+		self.__os_call(cmd)
+
+	@staticmethod
+	def __os_call(cmd_str):
+		print( cmd_str)
+		ret_code = call(cmd_str, shell=True)
+		print( ret_code)
 		print('*'*15)
-		ret_code = call(cmd, shell=True) # should be 0
+		if(ret_code != 0):
+			print('ERROR ?')
+
+	#class end
 
 def read_cmd_args():
 	FFMPEG_DIR = 'C:\\Users\\Marcin\\Desktop\\ffmpeg-20150215-git-2a72b16-win64-static\\bin'
 	# os.chdir(FFMPEG_DIR)
 	FFMPEG_BIN = 'ffmpeg'
-	return os.path.join(FFMPEG_DIR,FFMPEG_BIN), 'out', 'out', os.path.join(FFMPEG_DIR,'eugene.avi')
+	return os.path.join(FFMPEG_DIR,FFMPEG_BIN), 'out', os.path.join(FFMPEG_DIR,'eugene.avi')
 
 
 if __name__ == '__main__':
-	ffmpeg_bin, tmp_dir, out_dir, file_path = read_cmd_args()
+	ffmpeg_bin, out_dir, file_path = read_cmd_args()
 	script = GifConverter(ffmpeg_bin, out_dir)
-	script(file_path)
+	w,h = 800,448
+	script(file_path,w,h,55)
