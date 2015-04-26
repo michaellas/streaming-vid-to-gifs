@@ -49,10 +49,11 @@ class GifConverter:
 	first_frame_name = 'first_frame.png'
 	out_ext = '.gif'
 
-	def __init__(self, ffmpeg_bin, out_dir):
+	def __init__(self, ffmpeg_bin, out_dir, verbose=False):
 		self.ffmpeg_bin = ffmpeg_bin
 		self.out_dir = out_dir
 		self.first_frame = os.path.join(out_dir, GifConverter.first_frame_name)
+		self.verbose = verbose
 
 	def __call__(self, file_path, w, h, total_frames):
 		# print file_path
@@ -81,7 +82,7 @@ class GifConverter:
 			self.first_frame
 			]
 		cmd = ' '.join(cmd)
-		self.__os_call(cmd)
+		self.__os_call(cmd, self.verbose)
 
 	def __cross_fade(self, video_path, out_path, fade_start, fade_len, w, h):
 		overlay_image_over_last_frames_filter = ';'.join([
@@ -101,16 +102,19 @@ class GifConverter:
 			out_path
 			]
 		cmd = ' '.join(cmd)
-		self.__os_call(cmd)
+		self.__os_call(cmd, self.verbose)
 
 	@staticmethod
-	def __os_call(cmd_str):
-		print( cmd_str)
-		ret_code = call(cmd_str, shell=True)
-		print( ret_code)
-		print('*'*15)
+	def __os_call(cmd_str, verbose):
+		# print( cmd_str)
+		if verbose:
+			ret_code = call(cmd_str, shell=True)
+		else:
+			with open(os.devnull, "w") as fnull:
+				ret_code = call(cmd_str, stdout = fnull, stderr = fnull, shell=True)
 		if(ret_code != 0):
-			print('ERROR ?')
+			print('ERROR in:')
+			print(cmd_str)
 
 	#class end
 
