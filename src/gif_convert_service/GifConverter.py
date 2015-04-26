@@ -39,7 +39,7 @@ cmds cheatsheet:
 	https://support.mozilla.org/en-US/questions/993718
 '''
 
-from subprocess import call
+import subprocess
 import os
 
 class GifConverter:
@@ -108,19 +108,44 @@ class GifConverter:
 	def __os_call(cmd_str, verbose):
 		# print( cmd_str)
 		if verbose:
-			ret_code = call(cmd_str, shell=True)
+			ret_code = subprocess.call(cmd_str, shell=True)
 		else:
 			with open(os.devnull, "w") as fnull:
-				ret_code = call(cmd_str, stdout = fnull, stderr = fnull, shell=True)
+				ret_code = subprocess.call(cmd_str, stdout = fnull, stderr = fnull, shell=True)
 		if(ret_code != 0):
 			print('ERROR in:')
 			print(cmd_str)
 
 	#class end
 
+def video_info(ffmpeg_bin, file_path):
+	'''
+	We will call ffmpeg and it will crash. In a process it will dump video info, which we will parse.
+	(magic)
+	'''
+	import re
+	print file_path
+	# pattern = re.compile(r'Duration: 00:00:([0-9.]+).*Stream.*Video.*([0-9]{3,})x([0-9]{3,}).* ([0-9]+) fps')
+	pattern = re.compile(r'Duration: ([0-9.:]+).*Stream.*Video.*([0-9]{3,})x([0-9]{3,}).* ([0-9]+) fps')
+	p = subprocess.Popen([ffmpeg_bin, '-i', file_path],
+	                     stdout=subprocess.PIPE,
+	                     stderr=subprocess.PIPE)
+	stdout, stderr = p.communicate()
+	stderr = "".join( stderr.splitlines()) # remove newlines, (do not ask, I do not have time to do it in a better way)
+	match = pattern.search(stderr)
+	if match and len(match.groups()) == 4:
+		total_time, width, height, fps = match.groups()
+		split = total_time.split(':')
+		total_seconds = int(split[0])*3600 + int(split[1])*60 + float(split[2])
+		total_frames = int(total_seconds * float(fps) + 0.5)
+		print width, height, total_frames
+		return int(width), int(height), total_frames
+	else:
+		print "Could not parse video metadata"
+		exit(1)
+
 def read_cmd_args():
 	FFMPEG_DIR = 'C:\\Users\\Marcin\\Desktop\\ffmpeg-20150215-git-2a72b16-win64-static\\bin'
-	# os.chdir(FFMPEG_DIR)
 	FFMPEG_BIN = 'ffmpeg'
 	return os.path.join(FFMPEG_DIR,FFMPEG_BIN), 'out', os.path.join(FFMPEG_DIR,'eugene.avi')
 
@@ -128,5 +153,6 @@ def read_cmd_args():
 if __name__ == '__main__':
 	ffmpeg_bin, out_dir, file_path = read_cmd_args()
 	script = GifConverter(ffmpeg_bin, out_dir)
-	w,h = 800,448
-	script(file_path,w,h,55)
+	w,h,frames = video_info(ffmpeg_bin, file_path)
+	script(file_path,w,h,frames)
+	
