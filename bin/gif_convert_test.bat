@@ -1,0 +1,1 @@
+Scripts\py2.exe src\gif_convert_service\GifConverter.py
