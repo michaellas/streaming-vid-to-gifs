@@ -1,0 +1,1 @@
+Scripts\py2.exe src\gif_convert_service\GifConverter.py --ffmpeg "C:\Users\Marcin\Desktop\ffmpeg-20150215-git-2a72b16-win64-static\bin\ffmpeg" --out "out" %*
