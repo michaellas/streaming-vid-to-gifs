@@ -60,7 +60,7 @@ class GifConverter:
 		# print file_path
 		base = os.path.basename(file_path)
 		file_name, ext = os.path.splitext(base)
-		out_path = os.path.join(out_dir, file_name + GifConverter.out_ext)
+		out_path = os.path.join(self.out_dir, file_name + GifConverter.out_ext)
 		# print out_path
 
 		# f.e. will fade over last 10s guaranteeing 33% alpha on clip end
