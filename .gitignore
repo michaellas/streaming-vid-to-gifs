@@ -19,5 +19,9 @@ Lib/site-packages/*
 *.mp4
 *.m4v
 
+# output files
+/out/*.png
+/out/*.gif
+
 #
 Scripts/*.dll
