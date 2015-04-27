@@ -17,7 +17,7 @@ class FrameResizeService(Service):
     def __init__(self):
         """"nie"konstruktor, inicjalizator obiektu usługi"""
         #wywołanie metody inicjalizatora klasy nadrzędnej
-        super(Filter1Service, self).__init__()
+        super(FrameResizeService, self).__init__()
         #obiekt pozwalający na blokadę wątku
         self.filters_lock = threading.RLock()
 
@@ -53,5 +53,5 @@ class FrameResizeService(Service):
 if __name__=="__main__":
     #utworzenie obiektu kontrolera usługi
     config_name = os.path.join( os.path.dirname(__file__), "service.json") # f.e. src\mark_frame_service\service.json
-    sc = ServiceController(Filter1Service, config_name)
+    sc = ServiceController(FrameResizeService, config_name)
     sc.start() #uruchomienie usługi
