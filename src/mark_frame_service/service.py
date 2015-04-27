@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import threading
 
 #import modułów konektora msg_stream_connector
 from ComssServiceDevelopment.connectors.tcp.msg_stream_connector import InputMessageConnector, OutputMessageConnector
@@ -11,6 +10,9 @@ import cv2 #import modułu biblioteki OpenCV
 import numpy as np #import modułu biblioteki Numpy
 import os
 
+OPACITY = 0.4 # rectangle opacity
+SIZE = 0.25 # occupied by rectangle
+
 class MarkFrameService(Service):
     """klasa usługi musi dziedziczyć po ComssServiceDevelopment.service.Service"""
     
@@ -18,8 +20,6 @@ class MarkFrameService(Service):
         """"nie"konstruktor, inicjalizator obiektu usługi"""
         #wywołanie metody inicjalizatora klasy nadrzędnej
         super(MarkFrameService, self).__init__()
-        #obiekt pozwalający na blokadę wątku
-        self.filters_lock = threading.RLock()
 
     def declare_outputs(self):
         """deklaracja wyjść"""
@@ -41,20 +41,14 @@ class MarkFrameService(Service):
         while self.running():
             frame_obj = video_input.read()  #odebranie danych z interfejsu wejściowego
             frame = np.loads(frame_obj)     #załadowanie ramki do obiektu NumPy
-            with self.filters_lock:     #blokada wątku
-                current_filters = self.get_parameter("filtersOn") #pobranie wartości parametru "filtersOn"
-
-            #sprawdzenie czy parametr "filtersOn" ma wartość 1, czyli czy ma być stosowany filtr
-            if 1 in current_filters:
-                #zastosowanie filtru COLOR_BGR2GRAY z biblioteki OpenCV na ramce wideo (bylo)
-                #zmiana rozmiaru 
-                #frame = cv2.resize(frame,(120,50))
-                #nakladanie prostokatu
-                overlay = frame.copy()
-                cv2.rectangle(overlay,(0,0),(250,100),(255,0,0),-1)
-                opacity = 0.4
-                cv2.addWeighted(overlay, opacity, frame, 1 - opacity, 0, frame)
+            # draw rectangle
+            height, width, _ = frame.shape
+            overlay = frame.copy()
+            cv2.rectangle(overlay,(0,0),(int(width*SIZE),int(height*SIZE)),(255,0,0),-1)
+            cv2.addWeighted(overlay, OPACITY, frame, 1 - OPACITY, 0, frame)
+            # forward
             video_output.send(frame.dumps()) #przesłanie ramki za pomocą interfejsu wyjściowego
+
 
 if __name__=="__main__":
     #utworzenie obiektu kontrolera usługi

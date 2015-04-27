@@ -1,14 +1,19 @@
 {
-  "parametersHost": "localhost:11112",
+  "parametersHost": "localhost:11115",
   "inputs": {
     "videoInput": {
       "ip": "127.0.0.1",
-      "port": 10070
+      "port": 10074
+    },
+    "videoInputResized": {
+      "ip": "127.0.0.1",
+      "port": 10073
     }
   },
   "outputs": {
-  },
-  "parameters": {
-    "filtersOn": []
+    "gifData": {
+      "ip": "127.0.0.1",
+      "port": 10075
+    }
   }
 }

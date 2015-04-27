@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import threading
 
 #import modułów konektora msg_stream_connector
 from ComssServiceDevelopment.connectors.tcp.msg_stream_connector import InputMessageConnector, OutputMessageConnector
@@ -18,8 +17,6 @@ class ColorspaceToLuvService(Service):
         """"nie"konstruktor, inicjalizator obiektu usługi"""
         #wywołanie metody inicjalizatora klasy nadrzędnej
         super(ColorspaceToLuvService, self).__init__()
-        #obiekt pozwalający na blokadę wątku
-        self.filters_lock = threading.RLock()
 
     def declare_outputs(self):
         """deklaracja wyjść"""
@@ -41,13 +38,8 @@ class ColorspaceToLuvService(Service):
         while self.running():
             frame_obj = video_input.read()  #odebranie danych z interfejsu wejściowego
             frame = np.loads(frame_obj)     #załadowanie ramki do obiektu NumPy
-            with self.filters_lock:     #blokada wątku
-                current_filters = self.get_parameter("filtersOn") #pobranie wartości parametru "filtersOn"
-
-            #sprawdzenie czy parametr "filtersOn" ma wartość 1, czyli czy ma być stosowany filtr
-            if 1 in current_filters:
-                frame = cv2.cvtColor(frame, cv2.COLOR_RGB2LUV)
-            video_output.send(frame.dumps()) #przesłanie ramki za pomocą interfejsu wyjściowego
+            frame_luv = cv2.cvtColor(frame, cv2.COLOR_RGB2LUV)
+            video_output.send(frame_luv.dumps()) #przesłanie ramki za pomocą interfejsu wyjściowego
 
 if __name__=="__main__":
     #utworzenie obiektu kontrolera usługi

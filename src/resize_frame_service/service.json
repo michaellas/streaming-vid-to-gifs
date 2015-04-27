@@ -3,16 +3,17 @@
   "inputs": {
     "videoInput": {
       "ip": "127.0.0.1",
-      "port": 10072
+      "port": 10071
     }
   },
   "outputs": {
+    "videoOutputResized": {
+      "ip": "127.0.0.1",
+      "port": 10072
+    },
     "videoOutput": {
       "ip": "127.0.0.1",
-      "port": 10073
+      "port": 10074
     }
-  },
-  "parameters": {
-    "filtersOn": []
   }
 }
