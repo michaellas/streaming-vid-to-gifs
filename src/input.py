@@ -6,6 +6,7 @@ from ComssServiceDevelopment.connectors.tcp.msg_stream_connector import OutputMe
 #import modułu klasy testowego kontrolera usługi
 from ComssServiceDevelopment.development import DevServiceController
 
+import sys
 import cv2 #import modułu biblioteki OpenCV
 import Tkinter as tk #import modułu biblioteki Tkinter -- okienka
 
@@ -19,7 +20,7 @@ service_controller = DevServiceController("src/input_descriptor.json")
 #do której "zaślepka" jest podłączana
 service_controller.declare_connection("videoInput", OutputMessageConnector(service_controller))
 
-print 'starting input script'
+print '>starting input script'
 
 def __update_params_for_host(host_str, new_params):
     import socket
@@ -57,15 +58,22 @@ def update_all(root, cam, filters):
     root.update()
     root.after(20, func=lambda: update_all(root, cam, filters))
 
-print 'creating window'
+print '>parsing args'
+if len(sys.argv) < 2:
+    print 'Please provide input video as first argument'
+    exit()
+video_path = sys.argv[1]
+print '>selected video: %s' % video_path
 
+# cam = cv2.VideoCapture("data/Big.hero.6.mp4")
+cam = cv2.VideoCapture(video_path)
+if not cam.isOpened():
+    print 'could not open selected video, check provided path'
+    exit()
+
+print 'creating window'
 root = tk.Tk()
 root.title("Filters") #utworzenie okienka
-
-#17:48 19:59
-#cam = cv2.VideoCapture(0) #"podłączenie" do strumienia wideo z kamerki
-cam = cv2.VideoCapture("data/Big.hero.6.mp4")
-#cam = cv2.VideoCapture("Big.hero.6.mp4")
 
 #obsługa checkbox'a
 check1=tk.IntVar()
