@@ -17,7 +17,7 @@ class LoopDetectService(Service):
         self.filters_lock = threading.RLock()
 
     def declare_outputs(self):
-        self.declare_output("videoOutput", OutputMessageConnector(self)) 
+        self.declare_output("gifData", OutputMessageConnector(self)) 
 
     def declare_inputs(self):
         self.declare_input("videoInput", InputMessageConnector(self)) 
@@ -26,6 +26,7 @@ class LoopDetectService(Service):
     def run(self):
         video_input = self.get_input("videoInput")
         video_input_resized = self.get_input("videoInputResized")
+        gif_data_output = self.get_output("gifData")
         script = FrameAnalyzer()
 
         while self.running():
@@ -37,6 +38,7 @@ class LoopDetectService(Service):
 
             script(frame) # TODO check what it returns
             # TODO send output
+            # gif_data_output
 
 if __name__=="__main__":
     config_name = os.path.join( os.path.dirname(__file__), "service.json")

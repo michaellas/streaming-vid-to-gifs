@@ -1,22 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import logging
+import os
+import sys
 import numpy
 import cv2
 
 from FrameComparator import FrameComparator
 from RingBuffer import RingBuffer
-from Utils import *
-
-'''
-TODO use ffmpeg to convert avi to gif
-'''
 
 class FrameAnalyzer:
 	# config
+	out_dir = 'out/avi'
 	max_gif_length = 3 # in seconds
-	min_gif_length = 0.8 # in seconds
+	min_gif_length = 1.5 # in seconds
 	min_time_between_gifs = 0.5 # in seconds (min time between gifs)
 	thumbnail_frame_width = 150 # in px (compare frames using 150px wide miniature versions)
 	max_acceptable_distance = 1000 # used when determining if frames are the same
@@ -48,9 +45,9 @@ class FrameAnalyzer:
 			# write anim to file
 			# TODO use seq_start + 1
 			frames = [ self.__frame_cache[i][1] for i in range(seq_start, frame_id)]
-			name = 'out/fragment_{}'.format(frame_id)
-			print 'Saving: "%s", total of frames: %d' % (name, frame_id - seq_start)
-			write_movie( name, frames, int(width), int(height))
+			out_filename = os.path.join(self.out_dir,'fragment_%d.avi' % frame_id)
+			print 'Saving: "%s", #frames: %d' % (out_filename, int(frame_id - seq_start))
+			FrameAnalyzer.__write_movie( out_filename, frames, int(width), int(height))
 			self.__id_of_last_anim_end = frame_id
 
 		# put frame into buffer
@@ -92,12 +89,26 @@ class FrameAnalyzer:
 		h, w, channels = frame.shape
 		return w,h
 
+	@staticmethod
+	def __write_movie(out_filename, frames, width, height):
+		layers = 1
+		fourcc = cv2.cv.CV_FOURCC(*'XVID')
+		out = cv2.VideoWriter( out_filename, fourcc, 24, (width,height))
+		for frame in frames:
+			out.write(frame)
+		out.release()
+
 	def _stats(self):
 		return self.__stats
 
 	def _current_frame_id(self):
 		return self.__frame_id
 
+def print_progress( percent):
+	sys.stdout.write('\r')
+	bars = int(percent / 5)
+	sys.stdout.write("[%-20s] %d%% " % ('='*bars, int(percent)))
+	sys.stdout.flush()
 
 def main(movie):
 	to_percent = lambda x,max: x*100.0/max
@@ -120,25 +131,31 @@ def main(movie):
 	percent_stored = to_percent(frames_saved_as_anim, total_frames)
 	avg_frame_dist = sum(stats['frames_dist']) / len(stats['frames_dist'])
 
-	log.info( "saved {0}/{1} frames -> {2:.2f}% of movie stored in gifs".format(
+	print("saved {0}/{1} frames -> {2:.2f}% of movie stored in gifs".format(
 		frames_saved_as_anim, total_frames, percent_stored))
-	log.info( "avg frame difference: {:.2f}".format( avg_frame_dist))
+	print( "avg frame difference: {:.2f}".format( avg_frame_dist))
 
 if __name__ == '__main__':
-	log = createLogger()
-	log.info("---start---")
+	print "---start---"
 
-	# read file
-	log.debug("opening movie file")
-	# movie = read_movie( "data/Big.hero.6.mp4")
-	movie = read_movie( "data/TheForceAwakensOfficialTeaser-1.mp4")
-	# movie = read_movie( "data/Tangled2010-1.mp4")
+	# first arg should be video path
+	print '>parsing args'
+	if len(sys.argv) < 2:
+		print 'Please provide input video as first argument'
+		exit()
+	video_path = sys.argv[1]
+	print '>selected video: %s' % video_path
 
-	log.debug("\t> success")
+	print("opening movie file: \""+video_path+"\"")
+	movie = cv2.VideoCapture(video_path)
+	if not movie.isOpened():
+		print 'could not open selected video, check provided path'
+		exit()
+	print"\t> success"
 
 	# invoke script
 	main( movie)
 
 	# end
 	cv2.destroyAllWindows()
-	log.info("---end---")
+	print "---end---"

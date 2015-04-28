@@ -1,1 +1,1 @@
-Scripts\py2.exe src\loop_detect_service\FrameAnalyzer.py
+Scripts\py2.exe src\loop_detect_service\FrameAnalyzer.py %*
