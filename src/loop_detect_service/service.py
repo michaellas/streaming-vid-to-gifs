@@ -41,7 +41,7 @@ class LoopDetectService(Service):
             if loop_data and len(loop_data)==4:
                 file_path, w, h, frames_count = loop_data
                 self.__send_to_next_service(gif_data_output, file_path, w, h, frames_count)
-                # TODO send 'gif stored msg'
+                self.__push_notification()
 
     def __send_to_next_service(self, out_stream, file_path, w, h, frames_count):
         msg_obj = {
@@ -52,6 +52,17 @@ class LoopDetectService(Service):
         }
         msg = json.dumps(msg_obj)
         out_stream.send(msg)
+
+    def __push_notification(self):
+        '''push notification: "hey, I've just written loop video !" '''
+        import socket
+        to_send = [1]
+        new_params = {"filtersOn": to_send }
+        host, port = 'localhost', 11112
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((host, port))
+        s.sendall(json.dumps(new_params) + '\n')
+        s.close()
 
 
 if __name__=="__main__":
