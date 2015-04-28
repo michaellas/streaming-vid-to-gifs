@@ -9,9 +9,12 @@ from ComssServiceDevelopment.service import Service, ServiceController
 import cv2 #import modułu biblioteki OpenCV
 import numpy as np #import modułu biblioteki Numpy
 import os
+import threading
+from time import time
 
 OPACITY = 0.4 # rectangle opacity
 SIZE = 0.25 # occupied by rectangle
+RECT_DISPLAY_LEN = 3 # seconds?
 
 class MarkFrameService(Service):
     """klasa usługi musi dziedziczyć po ComssServiceDevelopment.service.Service"""
@@ -20,6 +23,8 @@ class MarkFrameService(Service):
         """"nie"konstruktor, inicjalizator obiektu usługi"""
         #wywołanie metody inicjalizatora klasy nadrzędnej
         super(MarkFrameService, self).__init__()
+        self.filters_lock = threading.RLock()
+        self.last_rect_shown_time = None
 
     def declare_outputs(self):
         """deklaracja wyjść"""
@@ -41,13 +46,27 @@ class MarkFrameService(Service):
         while self.running():
             frame_obj = video_input.read()  #odebranie danych z interfejsu wejściowego
             frame = np.loads(frame_obj)     #załadowanie ramki do obiektu NumPy
-            # draw rectangle
-            height, width, _ = frame.shape
-            overlay = frame.copy()
-            cv2.rectangle(overlay,(0,0),(int(width*SIZE),int(height*SIZE)),(255,0,0),-1)
-            cv2.addWeighted(overlay, OPACITY, frame, 1 - OPACITY, 0, frame)
+            
+            # filters
+            time_now = time()
+            with self.filters_lock:
+                current_filters = self.get_parameter("filtersOn")
+            if 1 in current_filters:
+                # self.set_parameter("filtersOn", [])
+                self.update_parameters({"filtersOn": []}) # reset filters
+                self.last_rect_shown_time = time_now
+                self.__draw_rectangle(frame)
+            elif self.last_rect_shown_time and (time_now - self.last_rect_shown_time) < RECT_DISPLAY_LEN:
+                self.__draw_rectangle(frame)
+
             # forward
             video_output.send(frame.dumps()) #przesłanie ramki za pomocą interfejsu wyjściowego
+
+    def __draw_rectangle(self, frame):
+        height, width, _ = frame.shape
+        overlay = frame.copy()
+        cv2.rectangle(overlay,(0,0),(int(width*SIZE),int(height*SIZE)),(255,0,0),-1)
+        cv2.addWeighted(overlay, OPACITY, frame, 1 - OPACITY, 0, frame)
 
 
 if __name__=="__main__":
