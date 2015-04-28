@@ -32,6 +32,7 @@ class FrameAnalyzer:
 		self.__stats = { 'frames_saved_as_anim': 0, 'frames_dist': [] }
 
 	def __call__(self, frame_data):
+		loop_data = None
 		width, height = FrameAnalyzer.__read_frame_dimensions(frame_data)
 
 		frame_id = self.__frame_id
@@ -41,19 +42,26 @@ class FrameAnalyzer:
 			self.__stats['frames_dist'].append( frame_dist)
 
 		if seq_start and frame_dist and (seq_start < frame_id) and ( (frame_id-seq_start > self.min_gif_length_f )) and (frame_dist < self.max_acceptable_distance):
-			self.__stats['frames_saved_as_anim'] += frame_id - seq_start
 			# write anim to file
-			# TODO use seq_start + 1
-			frames = [ self.__frame_cache[i][1] for i in range(seq_start, frame_id)]
+			# TODO use seq_start + 1 as loop start
+			total_frames = int(frame_id - seq_start)
+			self.__stats['frames_saved_as_anim'] += total_frames
+			# file path
 			out_filename = os.path.join(self.out_dir,'fragment_%d.avi' % frame_id)
-			print 'Saving: "%s", #frames: %d' % (out_filename, int(frame_id - seq_start))
-			FrameAnalyzer.__write_movie( out_filename, frames, int(width), int(height))
+			print 'Saving: "%s", #frames: %d' % (out_filename, total_frames)
+			# frames data
+			frames = [ self.__frame_cache[i][1] for i in range(seq_start, frame_id)]
+			# write
+			FrameAnalyzer.__write_movie( out_filename, frames, width, height)
+			# end
 			self.__id_of_last_anim_end = frame_id
+			loop_data = (out_filename, width, height, total_frames)
 
 		# put frame into buffer
 		self.__frame_thumbs_cache[frame_id] = thumb
 		self.__frame_cache[frame_id] = frame_data
 		self.__frame_id = frame_id + 1
+		return loop_data
 
 	def __generate_thumb(self, frame):
 		'''create thumbnail to speed up comparison'''
@@ -87,7 +95,7 @@ class FrameAnalyzer:
 	@staticmethod
 	def __read_frame_dimensions(frame):
 		h, w, channels = frame.shape
-		return w,h
+		return int(w),int(h)
 
 	@staticmethod
 	def __write_movie(out_filename, frames, width, height):

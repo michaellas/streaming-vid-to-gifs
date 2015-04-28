@@ -8,6 +8,7 @@ from ComssServiceDevelopment.service import Service, ServiceController
 import cv2
 import numpy as np
 import os
+import json
 from FrameAnalyzer import FrameAnalyzer
 
 class LoopDetectService(Service):
@@ -25,20 +26,33 @@ class LoopDetectService(Service):
 
     def run(self):
         video_input = self.get_input("videoInput")
-        video_input_resized = self.get_input("videoInputResized")
+        # video_input_resized = self.get_input("videoInputResized")
         gif_data_output = self.get_output("gifData")
         script = FrameAnalyzer()
 
         while self.running():
             # read frames - full scale and thumb
             frame_obj = video_input.read()
-            frame_obj_resized = video_input_resized.read()
+            # frame_obj_resized = video_input_resized.read()
             frame = np.loads(frame_obj)
-            frame_resized = np.loads(frame_obj_resized)
+            # frame_resized = np.loads(frame_obj_resized)
 
-            script(frame) # TODO check what it returns
-            # TODO send output
-            # gif_data_output
+            loop_data = script(frame)
+            if loop_data and len(loop_data)==4:
+                file_path, w, h, frames_count = loop_data
+                self.__send_to_next_service(gif_data_output, file_path, w, h, frames_count)
+                # TODO send 'gif stored msg'
+
+    def __send_to_next_service(self, out_stream, file_path, w, h, frames_count):
+        msg_obj = {
+            'path': file_path,
+            'w': w,
+            'h': h,
+            'frames': frames_count
+        }
+        msg = json.dumps(msg_obj)
+        out_stream.send(msg)
+
 
 if __name__=="__main__":
     config_name = os.path.join( os.path.dirname(__file__), "service.json")
