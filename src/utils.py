@@ -1,4 +1,5 @@
 import time
+import sys
 
 def log_called_times_decorator(func):
     def wrapper(*args):
@@ -15,7 +16,16 @@ def log_called_times_decorator(func):
     wrapper.dt = 3
     return wrapper
 
+def print_progress( percent=None, x=0, max=100):
+    if not percent:
+        percent = x*100.0/max
+    sys.stdout.write('\r')
+    bars = int(percent / 5)
+    sys.stdout.write("[%-20s] %d%% " % ('='*bars, int(percent)))
+    sys.stdout.flush()
+
 if __name__ == '__main__':
+    '''
     @log_called_times_decorator
     def ff():
         print 'f'
@@ -23,3 +33,8 @@ if __name__ == '__main__':
     while True:
         ff()
         time.sleep(1)
+    '''
+    
+    print_progress(45)
+    print ''
+    print_progress(x=20,max=200)

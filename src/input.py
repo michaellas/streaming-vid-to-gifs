@@ -23,17 +23,24 @@ service_controller.declare_connection("out1", OutputMessageConnector(service_con
 
 print '>starting input script'
 
-def update_all(root, cam, filters):
+def update_all(root, cam, filters, frame_id):
+    from src.utils import print_progress
+
     read_successful, frame = cam.read() #odczyt obrazu z kamery
     if read_successful:
         frame_dump = frame.dumps() #zrzut ramki wideo do postaci ciągu bajtów
         service_controller.get_connection("out1").send(frame_dump)
         # service_controller.get_connection("out2").send(frame_dump)
 
+        # print progress
+        total_frames = cam.get( cv2.cv.CV_CAP_PROP_FRAME_COUNT)
+        print_progress(x=frame_id, max=total_frames)
+
         root.update()
-        root.after(20, func=lambda: update_all(root, cam, filters))
+        root.after(20, func=lambda: update_all(root, cam, filters, frame_id+1))
     else:
-        print 'the show is over'
+        print '\nthe show is over'
+        print '---end---'
         root.destroy()
 
 print '>parsing args'
@@ -58,7 +65,7 @@ checkbox1 = tk.Checkbutton(root, text="--nope--", variable=check1)
 checkbox1.pack()
 
 #dołączenie metody update_all do głównej pętli programu, wynika ze specyfiki TKinter
-root.after(0, func=lambda: update_all(root, cam, set())) 
+root.after(0, func=lambda: update_all(root, cam, set(), 0)) 
 
 print 'starting the main loop'
 root.mainloop()

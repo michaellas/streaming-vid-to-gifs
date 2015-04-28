@@ -7,7 +7,7 @@ import cv2
 
 from FrameComparator import FrameComparator
 from RingBuffer import RingBuffer
-from src.utils import log_called_times_decorator
+from src.utils import log_called_times_decorator, print_progress
 
 class FrameAnalyzer:
 	# config
@@ -119,12 +119,6 @@ class FrameAnalyzer:
 
 	def _current_frame_id(self):
 		return self.__frame_id
-
-def print_progress( percent):
-	sys.stdout.write('\r')
-	bars = int(percent / 5)
-	sys.stdout.write("[%-20s] %d%% " % ('='*bars, int(percent)))
-	sys.stdout.flush()
 
 def main(movie):
 	to_percent = lambda x,max: x*100.0/max
