@@ -9,6 +9,7 @@ from ComssServiceDevelopment.service import Service, ServiceController
 import cv2
 import numpy as np
 import os
+from src.utils import log_called_times_decorator
 
 THUMB_WIDTH = 120
 
@@ -34,18 +35,24 @@ class FrameResizeService(Service):
 
     def run(self):
         video_input = self.get_input("videoInput")
-        video_output_resized = self.get_output("videoOutputResized")
         video_output = self.get_output("videoOutput")
+        video_output_resized = self.get_output("videoOutputResized")
 
         while self.running():
             # read frame object
             frame_obj = video_input.read()
             frame = np.loads(frame_obj)
             # resize
-            frame_resized = FrameResizeService.__resize_frame(frame)
+            frame_resized = FrameResizeService.__resize_frame(frame, THUMB_WIDTH)
             # send both normal and resized version
             video_output_resized.send(frame_resized.dumps())
             video_output.send(frame.dumps())
+
+            self.__debug_loop_iterations() # TODO remove
+
+    @log_called_times_decorator
+    def __debug_loop_iterations(self):
+        pass
 
     @staticmethod
     def __resize_frame(frame, expected_w):

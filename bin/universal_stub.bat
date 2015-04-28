@@ -1,0 +1,1 @@
+Scripts\py2.exe src\universal_stub.py %*

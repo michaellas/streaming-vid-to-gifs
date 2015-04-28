@@ -19,7 +19,7 @@ service_controller = DevServiceController("src/input_descriptor.json")
 #należy zwrócić uwagę, iż identyfikator musi być zgodny z WEJŚCIEM usługi,
 #do której "zaślepka" jest podłączana
 service_controller.declare_connection("out1", OutputMessageConnector(service_controller))
-service_controller.declare_connection("out2", OutputMessageConnector(service_controller))
+# service_controller.declare_connection("out2", OutputMessageConnector(service_controller))
 
 print '>starting input script'
 
@@ -28,8 +28,8 @@ def update_all(root, cam, filters):
     if read_successful:
         frame_dump = frame.dumps() #zrzut ramki wideo do postaci ciągu bajtów
         service_controller.get_connection("out1").send(frame_dump)
-        service_controller.get_connection("out2").send(frame_dump)
-        
+        # service_controller.get_connection("out2").send(frame_dump)
+
         root.update()
         root.after(20, func=lambda: update_all(root, cam, filters))
     else:

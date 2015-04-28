@@ -26,18 +26,18 @@ class LoopDetectService(Service):
 
     def run(self):
         video_input = self.get_input("videoInput")
-        # video_input_resized = self.get_input("videoInputResized")
+        video_input_resized = self.get_input("videoInputResized")
         gif_data_output = self.get_output("gifData")
         script = FrameAnalyzer()
 
         while self.running():
             # read frames - full scale and thumb
             frame_obj = video_input.read()
-            # frame_obj_resized = video_input_resized.read()
+            frame_obj_resized = video_input_resized.read()
             frame = np.loads(frame_obj)
-            # frame_resized = np.loads(frame_obj_resized)
+            frame_resized = np.loads(frame_obj_resized)
 
-            loop_data = script(frame)
+            loop_data = script(frame, frame_resized)
             if loop_data and len(loop_data)==4:
                 file_path, w, h, frames_count = loop_data
                 self.__send_to_next_service(gif_data_output, file_path, w, h, frames_count)
@@ -55,14 +55,17 @@ class LoopDetectService(Service):
 
     def __push_notification(self):
         '''push notification: "hey, I've just written loop video !" '''
-        import socket
-        to_send = [1]
-        new_params = {"filtersOn": to_send }
-        host, port = 'localhost', 11112
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((host, port))
-        s.sendall(json.dumps(new_params) + '\n')
-        s.close()
+        try:
+            import socket
+            to_send = [1]
+            new_params = {"filtersOn": to_send }
+            host, port = 'localhost', 11112
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((host, port))
+            s.sendall(json.dumps(new_params) + '\n')
+            s.close()
+        except Exception as e:
+            print 'push notification error: %s' % type(e)
 
 
 if __name__=="__main__":
