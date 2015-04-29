@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import threading
 
 #import modułów konektora msg_stream_connector
 from ComssServiceDevelopment.connectors.tcp.msg_stream_connector import InputMessageConnector, OutputMessageConnector
 #import modułów klasy bazowej Service oraz kontrolera usługi
 from ComssServiceDevelopment.service import Service, ServiceController
 
-import cv2 #import modułu biblioteki OpenCV
-import numpy as np #import modułu biblioteki Numpy
+import cv2
+import numpy as np
 import os
+from src.utils import log_called_times_decorator
+
+THUMB_WIDTH = 120
 
 class FrameResizeService(Service):
     """klasa usługi musi dziedziczyć po ComssServiceDevelopment.service.Service"""
@@ -18,14 +20,13 @@ class FrameResizeService(Service):
         """"nie"konstruktor, inicjalizator obiektu usługi"""
         #wywołanie metody inicjalizatora klasy nadrzędnej
         super(FrameResizeService, self).__init__()
-        #obiekt pozwalający na blokadę wątku
-        self.filters_lock = threading.RLock()
 
     def declare_outputs(self):
         """deklaracja wyjść"""
         #deklaracja wyjścia "videoOutput" będącego interfejsem
         #wyjściowym konektora msg_stream_connector
         self.declare_output("videoOutput", OutputMessageConnector(self)) 
+        self.declare_output("videoOutputResized", OutputMessageConnector(self)) 
 
     def declare_inputs(self):
         """deklaracja wejść"""
@@ -33,25 +34,34 @@ class FrameResizeService(Service):
         self.declare_input("videoInput", InputMessageConnector(self)) 
 
     def run(self):
-        """główna metoda usługi"""
-        video_input = self.get_input("videoInput")	#obiekt interfejsu wejściowego
-        video_output = self.get_output("videoOutput") #obiekt interfejsu wyjściowego
+        video_input = self.get_input("videoInput")
+        video_output = self.get_output("videoOutput")
+        video_output_resized = self.get_output("videoOutputResized")
 
-        #pętla główna usługi
         while self.running():
-            frame_obj = video_input.read()  #odebranie danych z interfejsu wejściowego
-            frame = np.loads(frame_obj)     #załadowanie ramki do obiektu NumPy
-            with self.filters_lock:     #blokada wątku
-                current_filters = self.get_parameter("filtersOn") #pobranie wartości parametru "filtersOn"
+            # read frame object
+            frame_obj = video_input.read()
+            frame = np.loads(frame_obj)
+            # resize
+            frame_resized = FrameResizeService.__resize_frame(frame, THUMB_WIDTH)
+            # send both normal and resized version
+            video_output_resized.send(frame_resized.dumps())
+            video_output.send(frame.dumps())
 
-            #sprawdzenie czy parametr "filtersOn" ma wartość 1, czyli czy ma być stosowany filtr
-            if 1 in current_filters:
-                #zmiana rozmiaru 
-                frame = cv2.resize(frame,(120,50))
-            video_output.send(frame.dumps()) #przesłanie ramki za pomocą interfejsu wyjściowego
+            self.__debug_loop_iterations() # TODO remove
+
+    @log_called_times_decorator
+    def __debug_loop_iterations(self):
+        pass
+
+    @staticmethod
+    def __resize_frame(frame, expected_w):
+        h, width, channels = frame.shape
+        scale_factor = expected_w * 1.0 / width
+        frame_thumb = cv2.resize( frame, dsize=(0,0), fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_CUBIC)
+        return frame_thumb
 
 if __name__=="__main__":
-    #utworzenie obiektu kontrolera usługi
     config_name = os.path.join( os.path.dirname(__file__), "service.json") # f.e. src\mark_frame_service\service.json
     sc = ServiceController(FrameResizeService, config_name)
-    sc.start() #uruchomienie usługi
+    sc.start()

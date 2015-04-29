@@ -3,12 +3,7 @@
   "inputs": {
     "videoInput": {
       "ip": "127.0.0.1",
-      "port": 10079
+      "port": 10075
     }
-  },
-  "outputs": {
-  },
-  "parameters": {
-    "filtersOn": []
   }
 }

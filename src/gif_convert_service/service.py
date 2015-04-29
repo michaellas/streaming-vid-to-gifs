@@ -8,6 +8,8 @@ import sys
 import json
 from GifConverter import GifConverter
 
+OUT_DIR = 'out'
+
 class GifConvertService(Service):
     
     def __init__(self):
@@ -23,9 +25,8 @@ class GifConvertService(Service):
         import socket
         video_input = self.get_input("videoInput")
 
-        # '''
         ffmpeg_bin = sys.argv[1]
-        script = GifConverter(ffmpeg_bin, "out")
+        script = GifConverter(ffmpeg_bin, OUT_DIR)
         while self.running():
             data = video_input.read()
             print data
@@ -40,28 +41,11 @@ class GifConvertService(Service):
                 script(file_path,w,h,frames)
             except Exception as e:
                 print 'Read/parse error  %s: "%s"' % (type(e), e)
-        '''
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        size = 1024
-        try:
-            # s.bind((self.handler.update_params_host.split(':')[0], int(self.handler.update_params_host.split(':')[1])))
-            s.bind(('localhost',10075))
-            while self.running():
-                s.listen(1)
-                client, addr = s.accept()
-                data = client.recv(size)
-                print data
-                # client.send(data)
-                client.send('Hi !')
-                client.close()
-                # d = file_like.readline()
-        except:
-            raise
-        finally:
-            s.close()
-        # '''
 
 if __name__=="__main__":
+    if len(sys.argv) < 2:
+        print 'Please provide ffmpeg executable path as first argument'
+        exit()
     config_name = os.path.join( os.path.dirname(__file__), "service.json")
     sc = ServiceController(GifConvertService, config_name)
     sc.start()
