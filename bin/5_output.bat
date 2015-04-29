@@ -1,1 +1,6 @@
-Scripts\py2.exe src\output.py
+@echo off
+setlocal
+call "%~dp0env.bat"
+
+%PYTHON_EXEC% src\output.py
+endlocal

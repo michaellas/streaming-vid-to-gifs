@@ -1,1 +1,6 @@
-Scripts\py2.exe src\gif_convert_service\stub_input.py
+@echo off
+setlocal
+call "%~dp0env.bat"
+
+%PYTHON_EXEC% src\gif_convert_service\stub_input.py
+endlocal

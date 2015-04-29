@@ -1,1 +1,6 @@
-Scripts\py2.exe src\loop_detect_service\RingBuffer.py
+@echo off
+setlocal
+call "%~dp0env.bat"
+
+%PYTHON_EXEC% src\loop_detect_service\RingBuffer.py
+endlocal
