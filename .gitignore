@@ -20,8 +20,8 @@ Lib/site-packages/*
 *.m4v
 
 # output files
-/out/*.png
-/out/*.gif
+/out/**/*.png
+/out/**/*.gif
 
 #
 Scripts/*.dll
