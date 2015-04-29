@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 import json
 import threading
 
@@ -11,10 +12,13 @@ from ComssServiceDevelopment.development import DevServiceController
 from GifConverter import video_info
 
 
-ffmpeg_bin = 'C:\\Users\\Marcin\\Desktop\\ffmpeg-20150215-git-2a72b16-win64-static\\bin\\ffmpeg'
-file_path = 'out\\SSPP-gif.avi'
-
 print 'starting stub input script'
+if len(sys.argv) < 3:
+  print 'provide FFMPEG_BIN and video file as args'
+  print 'provided: ' + str(sys.argv[1:])
+  exit()
+ffmpeg_bin = sys.argv[1]
+file_path = sys.argv[2]
 
 config_name = os.path.join( os.path.dirname(__file__), "service.json")
 service_controller = DevServiceController(config_name)
