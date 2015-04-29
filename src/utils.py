@@ -10,10 +10,10 @@ def log_called_times_decorator(func):
             print '[DEBUG] In last %ds %s() was called %d times' % (wrapper.dt,func.__name__,wrapper.count)
             wrapper.count = 0
             wrapper.last_log = now
-        func(*args)
+        return func(*args)
     wrapper.count = 0
     wrapper.last_log = time.time()
-    wrapper.dt = 3
+    wrapper.dt = 5
     return wrapper
 
 def print_progress( percent=None, x=0, max=100):
