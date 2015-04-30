@@ -2,13 +2,10 @@
 # -*- coding: utf-8 -*-
 import Tkinter as tk
 import threading
+import sys
 
 from ComssServiceDevelopment.connectors.tcp.msg_stream_connector import InputMessageConnector
 from ComssServiceDevelopment.development import DevServiceController
-
-import cv2
-import sys
-import numpy as np
 
 '''
 Quick and dirty service to end the stream gracefuly.

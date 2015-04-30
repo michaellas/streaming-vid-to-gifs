@@ -48,7 +48,7 @@ class FrameResizeService(Service):
             video_output_resized.send(frame_resized.dumps())
             video_output.send(frame.dumps())
 
-            self.__debug_loop_iterations() # TODO remove
+            self.__debug_loop_iterations()
 
     @log_called_times_decorator
     def __debug_loop_iterations(self):

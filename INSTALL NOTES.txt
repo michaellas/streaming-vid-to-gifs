@@ -25,5 +25,8 @@ set "TCL_LIBRARY=tcl\tcl8.5"
 set "TK_LIBRARY=tcl\tk8.5"
 
 
+linux:
+http://stackoverflow.com/questions/25215102/installing-opencv-for-python-on-ubuntu-getting-importerror-no-module-named-cv2
+
 
 ALWAYS USE 'Scripts\python.exe', otherwise it will still use the one found in $PATH$

@@ -39,7 +39,7 @@ class FrameAnalyzer:
 
 		# thumb version of frame
 		if thumb is None:
-			thumb = self.__generate_thumb(frame_data) # TODO remove this and use one generated from indep. service
+			thumb = self.__generate_thumb(frame_data)
 
 		# algo
 		seq_start, frame_dist = self.__get_frame_from_the_past(thumb)

@@ -17,13 +17,6 @@ ffmpeg docs:
 	-s WxH : resize
 	-ss position (input/output) : seek
 
-TODO ffserver(https://ffmpeg.org/ffserver.html)
-	OR: https://github.com/vbence/stream-m
-
-	stream send:
-	ffmpeg -f vfwcap -r 16 -i 0 -i http://localhost:8089/ -g 52 -acodec libvorbis -ab 64k -vcodec libvpx -vb 448k -f matroska http://example.com:8080/publish/first?password=secret
-	ffmpeg -r 16 -i out.webm -g 52 -acodec libvorbis -ab 64k -vcodec libvpx -vb 448k -f matroska http://localhost:8080/publish/first?password=secret
-
 other process call:
 	http://stackoverflow.com/questions/10400556/how-do-i-use-ffmpeg-with-python-by-passing-file-objects-instead-of-locations-to
 	http://zulko.github.io/blog/2013/09/27/read-and-write-video-frames-in-python-using-ffmpeg/
