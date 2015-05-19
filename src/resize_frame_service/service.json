@@ -10,10 +10,6 @@
     "videoOutputResized": {
       "ip": "127.0.0.1",
       "port": 10072
-    },
-    "videoOutput": {
-      "ip": "127.0.0.1",
-      "port": 10074
     }
   }
 }

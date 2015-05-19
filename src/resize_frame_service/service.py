@@ -25,7 +25,6 @@ class FrameResizeService(Service):
         """deklaracja wyjść"""
         #deklaracja wyjścia "videoOutput" będącego interfejsem
         #wyjściowym konektora msg_stream_connector
-        self.declare_output("videoOutput", OutputMessageConnector(self)) 
         self.declare_output("videoOutputResized", OutputMessageConnector(self)) 
 
     def declare_inputs(self):
@@ -35,7 +34,6 @@ class FrameResizeService(Service):
 
     def run(self):
         video_input = self.get_input("videoInput")
-        video_output = self.get_output("videoOutput")
         video_output_resized = self.get_output("videoOutputResized")
 
         while self.running():
@@ -46,7 +44,6 @@ class FrameResizeService(Service):
             frame_resized = FrameResizeService.__resize_frame(frame, THUMB_WIDTH)
             # send both normal and resized version
             video_output_resized.send(frame_resized.dumps())
-            video_output.send(frame.dumps())
 
             self.__debug_loop_iterations()
 
