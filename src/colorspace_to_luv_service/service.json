@@ -1,0 +1,15 @@
+{
+  "parametersHost": "localhost:11114",
+  "inputs": {
+    "videoInput": {
+      "ip": "127.0.0.1",
+      "port": 10072
+    }
+  },
+  "outputs": {
+    "videoOutput": {
+      "ip": "127.0.0.1",
+      "port": 10073
+    }
+  }
+}

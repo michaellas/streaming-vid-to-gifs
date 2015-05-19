@@ -1,0 +1,23 @@
+# directories
+Include
+tcl
+Scripts
+
+# ignore lib unless in Lib/site-packages
+Lib/*
+!/Lib/site-packages/
+
+# ignore Lib/site-packages unless in Lib/site-packages/ComssServiceDevelopment/
+Lib/site-packages/*
+!Lib/site-packages/ComssServiceDevelopment/
+
+# compiled
+*.pyc
+
+# media test files
+*.avi
+*.mp4
+*.m4v
+
+#
+Scripts/*.dll

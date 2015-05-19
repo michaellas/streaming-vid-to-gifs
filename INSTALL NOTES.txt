@@ -1,0 +1,32 @@
+1. use virtualenv to generate env ( with python 2!), activate it using one of the scripts
+2. download numpy installer and extract the *-nosse installer
+3. copy numpy-1.9.2-win32-superpack-python2.7.exe\numpy-1.9.2-nosse.exe\PLATLIB\ to ENV\Lib\site-packages
+4. download opencv
+5. copy opencv-2.4.11.exe\opencv\build\python\2.7\x86\cv2.pyd to ENV\Lib\site-packages
+6. test:
+Scripts\python.exe #check if it is python 2.X !!!
+>> import numpy
+>> import cv2
+>> print cv2.__version__
+
+AD1. virtualenv.py -p "C:\programs\portable\Python2.7\App\python.exe" "C:\Users\Marcin\Desktop\pwr\tirt\env2"
+
+References:
+1. http://ntraft.com/opencv-in-a-virtualenv/
+2. http://docs.opencv.org/trunk/doc/py_tutorials/py_setup/py_setup_in_windows/py_setup_in_windows.html#install-opencv-python-in-windows
+
+
+
+Also to use tkinter:
+http://stackoverflow.com/questions/15884075/tkinter-in-a-virtualenv
+
+f.e. in my case:
+set "TCL_LIBRARY=tcl\tcl8.5"
+set "TK_LIBRARY=tcl\tk8.5"
+
+
+linux:
+http://stackoverflow.com/questions/25215102/installing-opencv-for-python-on-ubuntu-getting-importerror-no-module-named-cv2
+
+
+ALWAYS USE 'Scripts\python.exe', otherwise it will still use the one found in $PATH$

@@ -1,0 +1,13 @@
+{
+  "parametersHost": "localhost:11111",
+  "inputs": {
+    "out1": {
+      "ip": "127.0.0.1",
+      "port": 10071
+    },
+    "out2": {
+      "ip": "127.0.0.1",
+      "port": 10070
+    }
+  }
+}
