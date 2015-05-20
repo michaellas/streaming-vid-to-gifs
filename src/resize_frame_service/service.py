@@ -11,8 +11,6 @@ import numpy as np
 import os
 from src.utils import log_called_times_decorator
 
-THUMB_WIDTH = 120
-
 class FrameResizeService(Service):
     """klasa usługi musi dziedziczyć po ComssServiceDevelopment.service.Service"""
     
@@ -20,6 +18,7 @@ class FrameResizeService(Service):
         """"nie"konstruktor, inicjalizator obiektu usługi"""
         #wywołanie metody inicjalizatora klasy nadrzędnej
         super(FrameResizeService, self).__init__()
+        self.thumb_width = None
 
     def declare_outputs(self):
         """deklaracja wyjść"""
@@ -35,14 +34,15 @@ class FrameResizeService(Service):
     def run(self):
         video_input = self.get_input("videoInput")
         video_output_resized = self.get_output("videoOutputResized")
+        self.thumb_width = self.get_parameter("out_width")
+        print "thumb width: " +str(self.thumb_width) + str(type(self.thumb_width))
 
         while self.running():
             # read frame object
             frame_obj = video_input.read()
             frame = np.loads(frame_obj)
             # resize
-            frame_resized = FrameResizeService.__resize_frame(frame, THUMB_WIDTH)
-            # send both normal and resized version
+            frame_resized = FrameResizeService.__resize_frame(frame, self.thumb_width)
             video_output_resized.send(frame_resized.dumps())
 
             self.__debug_loop_iterations()
