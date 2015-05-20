@@ -15,5 +15,12 @@
       "ip": "127.0.0.1",
       "port": 10075
     }
+  },
+  "parameters": {
+    "out_dir": "out/avi",
+    "max_gif_length": 3,
+    "min_gif_length": 1.5,
+    "min_time_between_gifs": 0.5,
+    "max_acceptable_distance": 1000
   }
 }

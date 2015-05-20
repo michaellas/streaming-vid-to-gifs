@@ -31,6 +31,35 @@ class FrameAnalyzer:
 		self.__frame_thumbs_cache = RingBuffer(self.max_gif_length_f)
 		self.__stats = { 'frames_saved_as_anim': 0, 'frames_dist': [] }
 
+	def change_settings(self,
+						max_gif_length = None,
+						min_gif_length = None,
+						min_time_between_gifs = None,
+						max_acceptable_distance = None):
+		print "max: %s, min: %s, bet: %s, dist: %s" % (max_gif_length,min_gif_length,min_time_between_gifs,max_acceptable_distance)
+
+		try:
+			if max_acceptable_distance:
+				self.max_acceptable_distance = float(max_acceptable_distance)
+
+			recalc_const_based_settings = False
+			if max_gif_length:
+				self.max_gif_length = float(max_gif_length)
+				recalc_const_based_settings = True
+			if min_gif_length:
+				self.min_gif_length = float(min_gif_length)
+				recalc_const_based_settings = True
+			if min_time_between_gifs:
+				self.min_time_between_gifs = float(min_time_between_gifs)
+				recalc_const_based_settings = True
+
+			if recalc_const_based_settings:
+				self.max_gif_length_f = int(self.max_gif_length * std_fps)
+				self.min_gif_length_f = int(self.min_gif_length * std_fps)
+				self.min_time_between_gifs_f = int(self.min_time_between_gifs * std_fps)
+		except:
+			pass
+
 	@log_called_times_decorator
 	def __call__(self, frame_data, thumb=None):
 		loop_data = None

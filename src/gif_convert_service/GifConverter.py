@@ -38,7 +38,7 @@ import sys
 
 class GifConverter:
 
-	fade_len = 5        # fade last 5 seconds
+	fade_len = 5        # fade last 5 frames
 	fade_alpha = 0.33   # on last frame overlayed first frame should have 33% visibility
 	first_frame_name = 'first_frame.png'
 	out_ext = '.gif'

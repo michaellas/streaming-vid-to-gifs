@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+import cv2
+import os
+import json
+# import time
 import threading
+import numpy as np
 
 from ComssServiceDevelopment.connectors.tcp.msg_stream_connector import InputMessageConnector, OutputMessageConnector
 from ComssServiceDevelopment.service import Service, ServiceController
 
-import cv2
-import numpy as np
-import os
-import json
 from FrameAnalyzer import FrameAnalyzer
 
 class LoopDetectService(Service):
@@ -36,6 +38,13 @@ class LoopDetectService(Service):
             frame_obj_resized = video_input_resized.read()
             frame = np.loads(frame_obj)
             frame_resized = np.loads(frame_obj_resized)
+
+            with self.filters_lock:
+                script.change_settings(\
+                    self.get_parameter("max_gif_length"),
+                    self.get_parameter("min_gif_length"),
+                    self.get_parameter("min_time_between_gifs"),
+                    self.get_parameter("max_acceptable_distance") )
 
             loop_data = script(frame, frame_resized)
             if loop_data and len(loop_data)==4:
