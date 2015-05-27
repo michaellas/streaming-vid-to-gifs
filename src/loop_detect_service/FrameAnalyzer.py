@@ -40,24 +40,35 @@ class FrameAnalyzer:
 
 		try:
 			if max_acceptable_distance:
-				self.max_acceptable_distance = float(max_acceptable_distance)
+				f = float(max_acceptable_distance)
+				if f > 0:
+					self.max_acceptable_distance
 
 			recalc_const_based_settings = False
 			if max_gif_length:
-				self.max_gif_length = float(max_gif_length)
-				recalc_const_based_settings = True
+				f = float(max_gif_length)
+				if f > 0 and f < 20:
+					self.max_gif_length = f
+					recalc_const_based_settings = True
 			if min_gif_length:
-				self.min_gif_length = float(min_gif_length)
-				recalc_const_based_settings = True
+				f = float(min_gif_length)
+				if f > 0 and f < max_gif_length:
+					self.min_gif_length = f
+					recalc_const_based_settings = True
 			if min_time_between_gifs:
-				self.min_time_between_gifs = float(min_time_between_gifs)
-				recalc_const_based_settings = True
+				f = float(min_time_between_gifs)
+				if f > 0 and f < 600: # in seconds !!!
+					self.min_time_between_gifs = f
+					recalc_const_based_settings = True
 
 			if recalc_const_based_settings:
-				self.max_gif_length_f = int(self.max_gif_length * std_fps)
-				self.min_gif_length_f = int(self.min_gif_length * std_fps)
-				self.min_time_between_gifs_f = int(self.min_time_between_gifs * std_fps)
-		except:
+				self.max_gif_length_f = int(self.max_gif_length * FrameAnalyzer.std_fps)
+				self.min_gif_length_f = int(self.min_gif_length * FrameAnalyzer.std_fps)
+				self.min_time_between_gifs_f = int(self.min_time_between_gifs * FrameAnalyzer.std_fps)
+			print "parameters updated"
+		except Exception as e:
+			print "ERROR: incorrect parameters"
+			# print e
 			pass
 
 	@log_called_times_decorator
@@ -80,7 +91,7 @@ class FrameAnalyzer:
 			and (seq_start < frame_id) # well, would be weird otherwise
 			and (frame_id-seq_start > self.min_gif_length_f) # check min length
 			and (frame_dist < self.max_acceptable_distance)): # first and last frame are ~same
-			
+
 			total_frames = int(frame_id - seq_start)
 			self.__stats['frames_saved_as_anim'] += total_frames
 			# file path
@@ -110,7 +121,7 @@ class FrameAnalyzer:
 		# convert frame to CIELUV color space
 		#frameLUV = frame_thumb
 		frameLUV = cv2.cvtColor(frame_thumb, cv2.COLOR_RGB2LUV)
-		
+
 		return frameLUV
 
 	def __get_frame_from_the_past(self, frame):

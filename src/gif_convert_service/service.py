@@ -6,14 +6,15 @@ from ComssServiceDevelopment.service import Service, ServiceController
 import os
 import sys
 import json
+import threading
 from GifConverter import GifConverter
 
-OUT_DIR = 'out'
 
 class GifConvertService(Service):
     
     def __init__(self):
         super(GifConvertService, self).__init__()
+        self.filters_lock = threading.RLock()
 
     def declare_outputs(self):
         pass
@@ -26,8 +27,14 @@ class GifConvertService(Service):
         video_input = self.get_input("videoInput")
 
         ffmpeg_bin = sys.argv[1]
-        script = GifConverter(ffmpeg_bin, OUT_DIR)
+        out_dir = self.get_parameter("out_dir")
+        script = GifConverter(ffmpeg_bin, out_dir)
         while self.running():
+            with self.filters_lock:
+                script.change_settings(\
+                    self.get_parameter("smudge_length"),
+                    self.get_parameter("smudge_opacity") )
+
             data = video_input.read()
             print data
             try:

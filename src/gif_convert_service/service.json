@@ -5,5 +5,10 @@
       "ip": "127.0.0.1",
       "port": 10075
     }
+  },
+  "parameters": {
+    "out_dir": "out",
+    "smudge_length": 5,
+    "smudge_opacity": 0.3
   }
 }

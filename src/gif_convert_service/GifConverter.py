@@ -57,7 +57,10 @@ class GifConverter:
 		# print out_path
 
 		# f.e. will fade over last 10s guaranteeing 33% alpha on clip end
-		fade_start, real_fade_len = int(total_frames - GifConverter.fade_len), int(GifConverter.fade_len / GifConverter.fade_alpha)
+		fade_start = int(total_frames - self.fade_len)
+		fade_start = max(0, min( fade_start, total_frames))
+		real_fade_len = int(self.fade_len / self.fade_alpha)
+		real_fade_len = max(1, real_fade_len)
 		# print(fade_start, real_fade_len)
 
 		# extract first frame
@@ -65,7 +68,6 @@ class GifConverter:
 
 		# exec
 		self.__cross_fade(file_path,out_path, fade_start,real_fade_len, w,h)
-
 
 	def __create_first_frame_image(self, video_path):
 		cmd = [self.ffmpeg_bin,
@@ -110,6 +112,22 @@ class GifConverter:
 			print('ERROR in:')
 			print(cmd_str)
 
+	def change_settings(self, smudge_length = None, smudge_opacity = None):
+		print "len: %s, opacity: %s" % (smudge_length,smudge_opacity)
+		try:
+			if smudge_length:
+				f = int(smudge_length)
+				if f > 0:
+					self.smudge_length = f
+			if smudge_opacity:
+				f = float(smudge_opacity)
+				if f >= 0.0 and f <= 1.0:
+					self.fade_alpha = f
+			print "parameters updated"
+		except:
+			print "ERROR: incorrect parameters"
+			pass
+
 	#class end
 
 def video_info(ffmpeg_bin, file_path):
@@ -146,7 +164,7 @@ def read_cmd_args():
 	parser.add_argument('--out', '-o', help='output directory', type=str)
 	# parser.add_argument('--out', '-o', action='store_true', help='output file')
 	parser.add_argument('infile')
-	
+
 	args = parser.parse_args()
 	return (args.ffmpeg if args.ffmpeg else 'ffmpeg',
 		args.out if args.out else '',

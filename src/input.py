@@ -38,7 +38,7 @@ def _send_params_to_host(host_str, new_params):
     import socket
     import json
     print "send to: %s msg: changed !" % host_str
-    
+
     host, port = host_str.split(':')
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((host, int(port)))
@@ -71,7 +71,7 @@ def update_params(entries):
         s2_params_dict[param_name] = param_val
     # send
     _send_params_to_host(hosts['loop_detection'], s1_params_dict)
-    # _send_params_to_host(hosts['gif_encoder'], s2_params_dict)
+    _send_params_to_host(hosts['gif_encoder'], s2_params_dict)
 
 def update_all(root, cam, filters, frame_id):
     from src.utils import print_progress
@@ -129,7 +129,7 @@ if __name__ == '__main__':
     b1 = Button(root, text='Send params', command=(lambda e=ents: update_params(e)))
     b1.pack(side=LEFT, padx=5, pady=5)
 
-    root.after(0, func=lambda: update_all(root, cam, set(), 0)) 
+    root.after(0, func=lambda: update_all(root, cam, set(), 0))
 
     print 'starting the main loop'
     root.mainloop()
